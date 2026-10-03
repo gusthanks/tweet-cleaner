@@ -1,5 +1,15 @@
 # Mudanças
 
+## 2.1.0
+
+- Teto de 500 itens e 500 requisições por execução, contando novas tentativas.
+- Simulação para em 500 IDs e salva os pendentes localmente; parar antes também conserva a lista.
+- Botão Excluir lote salvo usa os IDs já encontrados sem repetir a varredura.
+- Cache separado por conta, aba e modo, preservado após atualizar a página.
+- Falhas ficam pendentes; sucessos são retirados da lista; próximo lote requer início manual.
+- Aviso explícito sobre o risco de suspensão por automação do site.
+- Testes com mais de 500 entradas, teto com retries, cache após recarga e interrupção parcial.
+
 ## 2.0.0
 
 - Painel em português com simulação, confirmação por conta, pausa, parada e relatório.

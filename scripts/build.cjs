@@ -5,7 +5,7 @@ const script = fs.readFileSync(path.join(root, 'delete-tweets.js'), 'utf8');
 fs.writeFileSync(path.join(root, 'tweetdelete.user.js'), `// ==UserScript==
 // @name         Tweet Cleaner
 // @namespace    https://github.com/gusthanks/tweet-cleaner
-// @version      2.0.0
+// @version      2.1.0
 // @description  Limpeza com simulação, retomada e confirmação explícita.
 // @match        https://x.com/*
 // @grant        GM_registerMenuCommand

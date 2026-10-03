@@ -7,10 +7,16 @@ Derivado de [backzso/tweetdelete](https://github.com/backzso/tweetdelete), sob l
 
 1. No Chrome, entre em https://x.com/gusthanks e aguarde o perfil carregar.
 2. Abra `delete-tweets.js`, copie o conteúdo completo e cole no Console das ferramentas de desenvolvedor (`Ctrl+Shift+J`).
-3. O painel abre em **Simular primeiro**. Clique **Iniciar** para contar os IDs encontrados sem apagar nada.
-4. Para excluir, desmarque a simulação e clique **Iniciar**. Digite a frase de confirmação solicitada pelo painel.
+3. O painel abre em **Simular primeiro**. Clique **Simular até 500** para localizar e salvar até 500 IDs sem apagar nada. Você pode clicar **Parar** antes: os IDs encontrados até então ficam salvos.
+4. Para excluir, desmarque a simulação e clique **Excluir lote salvo**. A exclusão usa os IDs já encontrados, sem repetir a rolagem. Digite a frase de confirmação solicitada pelo painel. Se não houver lote salvo, o botão **Excluir até 500** localiza e exclui diretamente.
 5. Deixe a aba aberta. Você pode **Pausar**, **Retomar** ou **Parar**. Uma requisição já enviada pode terminar depois de parar.
-6. Ao terminar, exporte o relatório, atualize a página e repita se houver posts restantes. Repita nas abas **Respostas** e **Reposts**.
+6. Ao terminar, exporte o relatório, atualize a página e inicie manualmente o próximo lote se houver posts restantes. Repita nas abas **Respostas** e **Reposts**. Nenhum lote seguinte começa automaticamente.
+
+Cada execução exclui ou desfaz no máximo **500 itens** e envia no máximo **500 requisições de exclusão**, incluindo tentativas e falhas. Assim, uma rodada pode concluir menos de 500 ações. Não há requisições simultâneas; o intervalo mínimo continua sendo 800 ms entre itens, além do tempo de rede, rolagem e esperas do X. **Esse teto não é um limite de segurança reconhecido pelo X.** Iniciar vários lotes seguidos mantém o volume acumulado da conta.
+
+O lote encontrado fica salvo localmente como IDs e tipos de operação, separado por conta, aba e modo. Sobrevive a atualizações da página. Falhas continuam pendentes; sucessos são retirados do lote. Uma nova simulação substitui o lote pendente da fonte atual. Carregar novos arquivos também substitui o lote anterior.
+
+Para atualizar da versão 2.0, pare a execução, atualize a aba e cole o script 2.1. Os IDs que a simulação 2.0 encontrou não foram salvos e precisam ser localizados uma vez pela nova versão. O histórico de exclusões concluídas é preservado.
 
 Não é necessário descer toda a página previamente: o script rola aos poucos enquanto processa o que aparece. O X pode deixar de exibir posts antigos; uma rodada sem novos IDs **não comprova** que o histórico inteiro foi removido. O script não troca de aba nem recarrega automaticamente.
 
@@ -22,7 +28,7 @@ O arquivo do X é uma fotografia do momento da exportação: posts posteriores p
 
 ## Retomada e privacidade
 
-Somente os IDs de ações concluídas ficam em `localStorage`, separados por conta e por operação. O texto dos tweets e credenciais não ficam salvos pelo script. Após atualizar ou fechar a aba, cole novamente o script e inicie uma nova rodada: os IDs concluídos são pulados. Falhas são tentadas novamente na rodada seguinte.
+Os IDs de ações concluídas e os IDs do lote pendente ficam em `localStorage`, separados por conta e por operação. O texto dos tweets e credenciais não ficam salvos pelo script. Após atualizar ou fechar a aba, cole novamente o script e inicie uma nova rodada: os IDs concluídos são pulados. Falhas são tentadas novamente na rodada seguinte.
 
 Uma trava do navegador impede duas execuções simultâneas na mesma conta/origem. A conta conectada precisa estar identificável no link Perfil e corresponder ao perfil aberto; o script verifica isso antes de cada ação.
 
@@ -30,7 +36,8 @@ O relatório exportado contém IDs, contagens, conta e falhas, sem texto dos twe
 
 ## Limites e compatibilidade
 
-- A exclusão é permanente. A simulação e a confirmação são obrigatórias no fluxo de uso, mas a simulação apenas conta IDs; ela não testa a API.
+- A exclusão é permanente. A simulação é opcional; a confirmação explícita antes de excluir é obrigatória. A simulação encontra IDs, mas não testa a API.
+- O X alerta que automação por scripts do site pode resultar em suspensão permanente. Este script usa endpoints internos com a sessão do navegador; respeitar o teto e as respostas de limite **não elimina esse risco**. Veja as [regras de automação](https://help.x.com/en/rules-and-policies/x-automation).
 - O script usa endpoints internos do X, herdados do projeto original. Eles podem mudar sem aviso. **A compatibilidade com a API atual do X não foi validada em uma exclusão real nesta versão.**
 - HTTP 401/403/404 interrompe a execução. O script não finge que um endpoint inexistente significa tweet já removido.
 - Uma resposta 2xx só é contada como sucesso quando contém o campo de resultado esperado da operação. Uma resposta inesperada é registrada como falha.
