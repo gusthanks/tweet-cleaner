@@ -7,16 +7,16 @@ Derivado de [backzso/tweetdelete](https://github.com/backzso/tweetdelete), sob l
 
 1. No Chrome, entre em https://x.com/gusthanks e aguarde o perfil carregar.
 2. Abra `delete-tweets.js`, copie o conteúdo completo e cole no Console das ferramentas de desenvolvedor (`Ctrl+Shift+J`).
-3. O painel abre em **Simular primeiro**. Clique **Simular até 500** para localizar e salvar até 500 IDs sem apagar nada. Você pode clicar **Parar** antes: os IDs encontrados até então ficam salvos.
-4. Para excluir, desmarque a simulação e clique **Excluir lote salvo**. A exclusão usa os IDs já encontrados, sem repetir a rolagem. Digite a frase de confirmação solicitada pelo painel. Se não houver lote salvo, o botão **Excluir até 500** localiza e exclui diretamente.
+3. O painel abre em **Simular primeiro**. Clique **Simular** para localizar e salvar IDs sem apagar nada. Você pode clicar **Parar** antes: os IDs encontrados até então ficam salvos.
+4. Para excluir, desmarque a simulação e clique **Excluir e continuar**. A exclusão começa pelos IDs já encontrados, sem repetir a simulação, e depois busca automaticamente os demais na página. Digite a frase de confirmação solicitada pelo painel. Se não houver lista salva, o botão **Excluir disponíveis** localiza e exclui diretamente.
 5. Deixe a aba aberta. Você pode **Pausar**, **Retomar** ou **Parar**. Uma requisição já enviada pode terminar depois de parar.
-6. Ao terminar, exporte o relatório, atualize a página e inicie manualmente o próximo lote se houver posts restantes. Repita nas abas **Respostas** e **Reposts**. Nenhum lote seguinte começa automaticamente.
+6. Ao terminar, exporte o relatório e atualize a página para conferir restantes. Repita nas abas **Respostas** e **Reposts**. A troca entre abas ainda é manual.
 
-Cada execução exclui ou desfaz no máximo **500 itens** e envia no máximo **500 requisições de exclusão**, incluindo tentativas e falhas. Assim, uma rodada pode concluir menos de 500 ações. Não há requisições simultâneas; o intervalo mínimo continua sendo 800 ms entre itens, além do tempo de rede, rolagem e esperas do X. **Esse teto não é um limite de segurança reconhecido pelo X.** Iniciar vários lotes seguidos mantém o volume acumulado da conta.
+A versão 2.2 não impõe um teto de 500 itens ou requisições. Continua até processar os IDs disponíveis ou ser parada, pausada ou interrompida por um erro. Não há requisições simultâneas; o intervalo mínimo continua sendo 800 ms entre itens, além do tempo de rede, rolagem e esperas do X. Ao receber HTTP 429, aguarda o reset e tenta o mesmo ID novamente; não contorna o limite.
 
 O lote encontrado fica salvo localmente como IDs e tipos de operação, separado por conta, aba e modo. Sobrevive a atualizações da página. Falhas continuam pendentes; sucessos são retirados do lote. Uma nova simulação substitui o lote pendente da fonte atual. Carregar novos arquivos também substitui o lote anterior.
 
-Para atualizar da versão 2.0, pare a execução, atualize a aba e cole o script 2.1. Os IDs que a simulação 2.0 encontrou não foram salvos e precisam ser localizados uma vez pela nova versão. O histórico de exclusões concluídas é preservado.
+Para atualizar da versão 2.1, clique **Parar**, espere os controles ficarem disponíveis, atualize a aba e cole o script 2.2. O histórico de exclusões e os IDs pendentes da versão 2.1 são preservados, desde que você use a mesma conta no mesmo navegador/origem. Desmarque **Simular primeiro** para retomar a exclusão. A simulação 2.0 não salvava IDs pendentes.
 
 Não é necessário descer toda a página previamente: o script rola aos poucos enquanto processa o que aparece. O X pode deixar de exibir posts antigos; uma rodada sem novos IDs **não comprova** que o histórico inteiro foi removido. O script não troca de aba nem recarrega automaticamente.
 

@@ -1,8 +1,7 @@
 /* MIT; derived from backzso/tweetdelete (c) 2026 backzso. */
 (function(root){
 'use strict';
-const VERSION='2.1.0';
-const MAX_BATCH=500;
+const VERSION='2.2.0';
 const QUERY={tweet:'VaenaVgh5q5ih7kvyVjgtg',retweet:'iQtK4dl5hBmXewYZuEOKVw'};
 const BEARER='AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA';
 function validHost(host){return ['x.com','www.x.com','twitter.com','www.twitter.com'].includes(host);}
@@ -38,11 +37,11 @@ try{account=identity();done=checkpoint(root.localStorage.getItem('tweet-cleaner:
 const key='tweet-cleaner:v2:'+account;
 const previewKey=key+':preview';
 const sourceKey=()=>el('mode').value+':'+root.location.pathname;
-let queue=[],busy=false,paused=false,stopped=false,dry=true,limitReached=false;
+let queue=[],busy=false,paused=false,stopped=false,dry=true;
 let previewSource='',preview=new Map();
 try {
  const saved=JSON.parse(root.localStorage.getItem(previewKey)||'null');
- if(saved&&typeof saved.source==='string'&&Array.isArray(saved.items)&&saved.items.length<=MAX_BATCH&&saved.items.every(t=>/^\d+$/.test(t.id)&&['tweet','retweet'].includes(t.kind))){previewSource=saved.source;preview=new Map(saved.items.map(t=>[t.kind+':'+t.id,t]));}
+ if(saved&&typeof saved.source==='string'&&Array.isArray(saved.items)&&saved.items.every(t=>/^\d+$/.test(t.id)&&['tweet','retweet'].includes(t.kind))){previewSource=saved.source;preview=new Map(saved.items.map(t=>[t.kind+':'+t.id,t]));}
 }catch(e){ /* Invalid pending cache is discarded, never used for deletion. */ }
 const stats={deleted:0,gone:0,failed:0,skipped:0,scanned:0,requests:0},failures=new Map(),attempted=new Set();
 const host=doc.createElement('div');host.style.cssText='position:fixed;right:12px;bottom:12px;z-index:2147483647;max-width:calc(100vw - 24px)';
@@ -51,11 +50,11 @@ shadow.innerHTML=`<style>:host{font:14px system-ui}section{background:#15202b;co
 <section><h2>Tweet Cleaner ${VERSION}</h2><p id="account"></p>
 <select id="mode"><option value="timeline">Página atual (sem arquivo)</option><option value="archive">Arquivo local (histórico)</option></select>
 <input id="files" type="file" accept=".js,.json" multiple hidden><label><input id="dry" type="checkbox" checked>Simular primeiro</label>
-<p>Até 500 itens por execução, com no máximo 500 requisições de exclusão, incluindo tentativas. Exclusão permanente. A página pode omitir posts antigos.</p>
+<p>Execução contínua, com espera automática nos limites do X. Exclusão permanente. A página pode omitir posts antigos.</p>
 <button id="start">Iniciar</button><button id="pause" disabled>Pausar</button><button id="stop" disabled>Parar</button><button id="report">Exportar relatório</button><button id="hide">Ocultar</button>
 <p id="stats"></p><pre id="status">Pronto. A simulação não apaga nada.</pre></section>`;
 doc.body.appendChild(host);const el=id=>shadow.getElementById(id);el('account').textContent='@'+account+' · '+done.size+' ações concluídas salvas';
-function update(message){el('stats').textContent=`Excluídos: ${stats.deleted} · já ausentes: ${stats.gone} · falhas: ${stats.failed}\nEncontrados: ${stats.scanned} · retomada: ${stats.skipped}\nRequisições: ${stats.requests}/${MAX_BATCH} · IDs pendentes: ${preview.size}`;if(message)el('status').textContent=message;}
+function update(message){el('stats').textContent=`Excluídos: ${stats.deleted} · já ausentes: ${stats.gone} · falhas: ${stats.failed}\nEncontrados: ${stats.scanned} · retomada: ${stats.skipped}\nRequisições: ${stats.requests} · IDs pendentes: ${preview.size}`;if(message)el('status').textContent=message;}
 function savePreview(){root.localStorage.setItem(previewKey,JSON.stringify({source:previewSource,items:[...preview.values()]}));}
 async function wait(ms){const end=Date.now()+ms;while(!stopped&&(Date.now()<end||paused))await new Promise(r=>root.setTimeout(r,250));}
 function assertAccount(){if(identity()!==account)throw Error('A conta ou página mudou. Execução interrompida.');}
@@ -63,7 +62,6 @@ function save(item){done.add(item.kind+':'+item.id);root.localStorage.setItem(ke
 async function remove(item){
  for(let attempt=0;attempt<4&&!stopped;attempt++){
   await wait(0);if(stopped)return 'stopped';assertAccount();
-  if(stats.requests>=MAX_BATCH){limitReached=true;return 'limited';}
   const csrf=doc.cookie.match(/(?:^|;\s*)ct0=([^;]+)/)?.[1];if(!csrf)throw Error('Sessão expirada. Entre novamente no X.');
   const op=item.kind==='retweet'?'DeleteRetweet':'DeleteTweet',queryId=QUERY[item.kind];
   const variables=item.kind==='retweet'?{source_tweet_id:item.id,dark_request:false}:{tweet_id:item.id,dark_request:false};
@@ -72,7 +70,7 @@ async function remove(item){
   try{response=await root.fetch('https://x.com/i/api/graphql/'+queryId+'/'+op,{method:'POST',credentials:'include',signal:AbortSignal.timeout(30000),headers:{authorization:'Bearer '+BEARER,'x-csrf-token':csrf,'content-type':'application/json','x-twitter-auth-type':'OAuth2Session','x-twitter-active-user':'yes'},body:JSON.stringify({queryId,variables})});}
   catch(e){if(attempt===3)return 'failed';update('Falha de rede. Tentando novamente…');await wait(2000*2**attempt);continue;}
   const body=await response.json().catch(()=>null),result=classify(response.status,body,item.kind);
-  if(result==='rate'){if(stats.requests>=MAX_BATCH){limitReached=true;return 'limited';}const ms=rateWait(response.headers.get('x-rate-limit-reset'),Date.now());update('Limite do X. Retomada após '+new Date(Date.now()+ms).toLocaleTimeString());await wait(ms);attempt--;continue;}
+  if(result==='rate'){const ms=rateWait(response.headers.get('x-rate-limit-reset'),Date.now());update('Limite do X. Retomada após '+new Date(Date.now()+ms).toLocaleTimeString());await wait(ms);attempt--;continue;}
   if(result==='fatal')throw Error(`X respondeu HTTP ${response.status}. Sessão ou API incompatível; nenhuma conclusão de sucesso foi registrada.`);
   if(result==='retry'&&attempt<3){await wait(2000*2**attempt);continue;}
   return result==='retry'?'failed':result;
@@ -87,39 +85,38 @@ function visibleItems(){
  }return [...items.values()];
 }
 async function process(items){
- for(const item of items){if(stopped||limitReached)break;await wait(0);if(stopped)break;assertAccount();const id=item.kind+':'+item.id;if(attempted.has(id))continue;
+ for(const item of items){if(stopped)break;await wait(0);if(stopped)break;assertAccount();const id=item.kind+':'+item.id;if(attempted.has(id))continue;
   attempted.add(id);stats.scanned++;
   if(done.has(id)){stats.skipped++;preview.delete(id);savePreview();update();continue;}
-  if(preview.size>=MAX_BATCH&&!preview.has(id)){limitReached=true;break;}
   preview.set(id,item);savePreview();
-  if(dry){update('Simulação: IDs salvos para excluir sem repetir a varredura.');if(preview.size>=MAX_BATCH)limitReached=true;continue;}
-  const result=await remove(item);if(result==='ok'||result==='gone'){save(item);preview.delete(id);savePreview();result==='ok'?stats.deleted++:stats.gone++;failures.delete(id);}else if(result!=='stopped'&&result!=='limited'){stats.failed++;failures.set(id,result);}
-  if(stats.requests>=MAX_BATCH)limitReached=true;
+  if(dry){update('Simulação: IDs salvos para excluir sem repetir a varredura.');continue;}
+  const result=await remove(item);if(result==='ok'||result==='gone'){save(item);preview.delete(id);savePreview();result==='ok'?stats.deleted++:stats.gone++;failures.delete(id);}else if(result!=='stopped'){stats.failed++;failures.set(id,result);}
   update();await wait(800);
  }
 }
 async function run(){
- if(!dry&&preview.size){update('Excluindo os IDs já encontrados, sem rolar a página novamente.');await process([...preview.values()]);}
- else if(el('mode').value==='archive'){if(!queue.length)throw Error('Selecione arquivos tweets.js/tweets-part*.js.');await process(queue);}
- else{root.scrollTo(0,0);await wait(700);let idle=0,passes=0;
-  while(!stopped&&!limitReached&&idle<12){assertAccount();const before=attempted.size;await process(visibleItems());if(stopped||limitReached)break;const bottom=root.scrollY+root.innerHeight>=doc.documentElement.scrollHeight-100;idle=bottom&&attempted.size===before?idle+1:0;root.scrollBy(0,Math.round(root.innerHeight*.65));await wait(1500);if(++passes>20000)throw Error('Limite de varredura atingido. Exporte o relatório e reinicie.');}
+ const cached=!dry&&preview.size>0;
+ if(cached){update('Excluindo os IDs já encontrados; depois a busca continua automaticamente.');await process([...preview.values()]);}
+ if(el('mode').value==='archive'){if(queue.length)await process(queue);else if(!cached)throw Error('Selecione arquivos tweets.js/tweets-part*.js.');}
+ else if(!stopped){root.scrollTo(0,0);await wait(700);let idle=0,passes=0;
+  while(!stopped&&idle<12){assertAccount();const before=attempted.size;await process(visibleItems());if(stopped)break;const bottom=root.scrollY+root.innerHeight>=doc.documentElement.scrollHeight-100;idle=bottom&&attempted.size===before?idle+1:0;root.scrollBy(0,Math.round(root.innerHeight*.65));await wait(1500);if(++passes>20000)throw Error('Limite de varredura atingido. Exporte o relatório e reinicie.');}
  }
- update(dry?`${preview.size} IDs salvos. Desmarque Simular primeiro e clique Excluir lote salvo; não é preciso terminar a varredura.`:stopped?'Parado. Uma requisição já enviada pode terminar; progresso salvo.':limitReached?'Limite de 500 requisições atingido. Execução encerrada; o próximo lote exige início manual.':`Lote concluído com ${stats.failed} falhas. Atualize o perfil para conferir restantes; nenhum novo lote foi iniciado.`);
+ update(dry?`${preview.size} IDs salvos. Desmarque Simular primeiro e clique Excluir e continuar; não é preciso terminar a varredura.`:stopped?'Parado. Uma requisição já enviada pode terminar; progresso salvo.':`Execução concluída com ${stats.failed} falhas. Atualize o perfil para conferir restantes. Posts antigos podem exigir o arquivo do X.`);
 }
-function startLabel(){el('start').textContent=el('dry').checked?'Simular até 500':previewSource===sourceKey()&&preview.size?'Excluir lote salvo':'Excluir até 500';}
+function startLabel(){el('start').textContent=el('dry').checked?'Simular':previewSource===sourceKey()&&preview.size?'Excluir e continuar':'Excluir disponíveis';}
 el('dry').onchange=startLabel;
 el('mode').onchange=()=>{el('files').hidden=el('mode').value!=='archive';startLabel();};
 el('files').onchange=async()=>{queue=[];try{const combined=new Map();for(const file of el('files').files)for(const item of parseArchive(await file.text()))combined.set(item.id,item);queue=[...combined.values()];preview.clear();previewSource=sourceKey();savePreview();startLabel();update(queue.length+' IDs únicos carregados localmente.');}catch(e){update(e.message);}};
 el('start').onclick=async()=>{
  if(busy)return;dry=el('dry').checked;try{assertAccount();}catch(e){update(e.message);return;}
  if(el('mode').value==='archive'&&!queue.length&&!(previewSource===sourceKey()&&preview.size)){update('Selecione os arquivos primeiro.');return;}
- if(!dry&&root.prompt(`Excluir até 500 itens de @${account}, com até 500 requisições incluindo tentativas? A automação do site pode resultar em suspensão pelo X. Digite EXCLUIR @${account} para iniciar.`)!=='EXCLUIR @'+account)return;
+ if(!dry&&root.prompt(`Excluir continuamente os itens disponíveis de @${account}, aguardando os limites do X? A automação do site pode resultar em suspensão pelo X. Digite EXCLUIR @${account} para iniciar.`)!=='EXCLUIR @'+account)return;
  if(!root.navigator.locks){update('Use Chrome atualizado: este navegador não oferece trava de execução.');return;}
  await root.navigator.locks.request(key,{ifAvailable:true},async lock=>{
   if(!lock){update('Já existe uma execução nesta conta em outra aba.');return;}
   try{done=checkpoint(root.localStorage.getItem(key));}catch(e){update(e.message);return;}
   try{if(previewSource!==sourceKey()||dry){preview.clear();previewSource=sourceKey();savePreview();}}catch(e){update('Interrompido: '+e.message);return;}
-  busy=true;stopped=false;paused=false;limitReached=false;attempted.clear();Object.keys(stats).forEach(k=>stats[k]=0);failures.clear();
+  busy=true;stopped=false;paused=false;attempted.clear();Object.keys(stats).forEach(k=>stats[k]=0);failures.clear();
   ['start','mode','files','dry'].forEach(id=>el(id).disabled=true);el('pause').disabled=el('stop').disabled=false;el('pause').textContent='Pausar';
   try{await run();}catch(e){update('Interrompido: '+e.message);}finally{busy=false;['start','mode','files','dry'].forEach(id=>el(id).disabled=false);el('pause').disabled=el('stop').disabled=true;startLabel();}
  });

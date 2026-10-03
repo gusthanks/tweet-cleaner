@@ -45,32 +45,33 @@ test('storage failure aborts instead of silently losing checkpoint',async()=>{
  const h=harness();await h.archive();h.nodes.get('dry').checked=false;h.root.localStorage.setItem=()=>{throw Error('quota exceeded');};
  await h.nodes.get('start').onclick();assert.equal(h.calls.length,0);assert.match(h.nodes.get('status').textContent,/quota exceeded/);
 });
-test('simulation collects max 500; deletion reuses cache after reload without scrolling',async()=>{
+test('simulation exceeds 500; deletion reuses archive cache after reload',async()=>{
  const h=harness();await h.archive(505);await h.nodes.get('start').onclick();
- assert.equal(h.calls.length,0);assert.equal(JSON.parse(h.storage.get('tweet-cleaner:v2:gusthanks:preview')).items.length,500);
+ assert.equal(h.calls.length,0);assert.equal(JSON.parse(h.storage.get('tweet-cleaner:v2:gusthanks:preview')).items.length,505);
  const next=harness([],h.storage);next.nodes.get('mode').value='archive';next.nodes.get('dry').checked=false;
- await next.nodes.get('start').onclick();assert.equal(next.calls.length,500);assert.equal(next.scrolls.length,0);
- assert.equal(JSON.parse(next.storage.get('tweet-cleaner:v2:gusthanks')).done.length,500);
- assert.match(next.nodes.get('status').textContent,/Limite de 500/);
+ await next.nodes.get('start').onclick();assert.equal(next.calls.length,505);assert.equal(next.scrolls.length,0);
+ assert.equal(JSON.parse(next.storage.get('tweet-cleaner:v2:gusthanks')).done.length,505);
+ assert.match(next.nodes.get('status').textContent,/Execução concluída/);
 });
-test('next manual archive run deletes remaining items only',async()=>{
+test('archive completes over 500 in one run; rerun skips all successes',async()=>{
  const h=harness();await h.archive(505);h.nodes.get('dry').checked=false;
- await h.nodes.get('start').onclick();assert.equal(h.calls.length,500);
+ await h.nodes.get('start').onclick();assert.equal(h.calls.length,505);
  await h.nodes.get('start').onclick();assert.equal(h.calls.length,505);
 });
-test('retries also count toward max 500 requests',async()=>{
+test('server retries continue beyond 500 requests',async()=>{
  const responses=Array.from({length:499},()=>({status:200,body:{data:{delete_tweet:{}}}}));responses.push({status:503,body:{}});
  const h=harness(responses);await h.archive(505);h.nodes.get('dry').checked=false;
- await h.nodes.get('start').onclick();assert.equal(h.calls.length,500);
- assert.equal(JSON.parse(h.storage.get('tweet-cleaner:v2:gusthanks')).done.length,499);
- assert.equal(JSON.parse(h.storage.get('tweet-cleaner:v2:gusthanks:preview')).items.length,1);
+ await h.nodes.get('start').onclick();assert.equal(h.calls.length,506);
+ assert.equal(JSON.parse(h.storage.get('tweet-cleaner:v2:gusthanks')).done.length,505);
+ assert.equal(JSON.parse(h.storage.get('tweet-cleaner:v2:gusthanks:preview')).items.length,0);
 });
-test('partial timeline simulation saves IDs; delete uses them without another scroll',async()=>{
+test('partial timeline simulation is deleted first; remaining page items follow automatically',async()=>{
  const h=harness();h.root.document.querySelectorAll=()=>Array.from({length:80},(_,i)=>({querySelector:sel=>sel.includes('time')?{closest:()=>({getAttribute:()=>'/gusthanks/status/'+(i+1)})}:null}));
  const set=h.root.localStorage.setItem;h.root.localStorage.setItem=(k,v)=>{set(k,v);if(k.endsWith(':preview')&&JSON.parse(v).items.length===37)h.root.TweetCleaner.stop();};
  await h.nodes.get('start').onclick();assert.equal(h.calls.length,0);
  const scrolls=h.scrolls.length;h.root.localStorage.setItem=set;h.nodes.get('dry').checked=false;
- await h.nodes.get('start').onclick();assert.equal(h.calls.length,37);assert.equal(h.scrolls.length,scrolls);
+ const fetch=h.root.fetch;h.root.fetch=async(...args)=>{if(h.calls.length<37)assert.equal(h.scrolls.length,scrolls);return fetch(...args);};
+ await h.nodes.get('start').onclick();assert.equal(h.calls.length,80);assert.ok(h.scrolls.length>scrolls);
 });
 test('cached IDs cannot leak from Posts to Replies',async()=>{
  const h=harness();h.root.document.querySelectorAll=()=>[{querySelector:sel=>sel.includes('time')?{closest:()=>({getAttribute:()=>'/gusthanks/status/1'})}:null}];
