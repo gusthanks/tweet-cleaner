@@ -9,3 +9,12 @@ Thumbs.db
 tweets.js
 data/
 *.zip
+
+tweets-part*.js
+tweet-part*.js
+tweet-headers*.js
+deleted-tweets.js
+*report*.json
+.env
+.env.*
+node_modules/
