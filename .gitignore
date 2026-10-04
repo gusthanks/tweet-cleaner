@@ -18,3 +18,5 @@ deleted-tweets.js
 .env
 .env.*
 node_modules/
+dist/
+artifacts/

@@ -1,73 +1,83 @@
 # Tweet Cleaner
 
-Limpeza gratuita de tweets, respostas e reposts no navegador, com painel em português.
-Derivado de [backzso/tweetdelete](https://github.com/backzso/tweetdelete), sob licença MIT.
+Extensão gratuita para limpar posts, respostas e reposts do X, com painel em português, prévia, pausa e retomada local. Sem anúncios, assinatura ou teto comercial de itens.
 
-## Começar sem esperar o arquivo do X
+Derivada de [backzso/tweetdelete](https://github.com/backzso/tweetdelete), sob licença MIT. Ferramenta independente, sem vínculo com X ou Google.
 
-1. No Chrome, entre em https://x.com/gusthanks e aguarde o perfil carregar.
-2. Abra `delete-tweets.js`, copie o conteúdo completo e cole no Console das ferramentas de desenvolvedor (`Ctrl+Shift+J`).
-3. O painel abre em **Simular primeiro**. Clique **Simular** para localizar e salvar IDs sem apagar nada. Você pode clicar **Parar** antes: os IDs encontrados até então ficam salvos.
-4. Para excluir, desmarque a simulação e clique **Excluir e continuar**. A exclusão começa pelos IDs já encontrados, sem repetir a simulação, e depois busca automaticamente os demais na página. Digite a frase de confirmação solicitada pelo painel. Se não houver lista salva, o botão **Excluir disponíveis** localiza e exclui diretamente.
-5. Deixe a aba aberta. Você pode **Pausar**, **Retomar** ou **Parar**. Uma requisição já enviada pode terminar depois de parar.
-6. Ao terminar, exporte o relatório e atualize a página para conferir restantes. Repita nas abas **Respostas** e **Reposts**. A troca entre abas ainda é manual.
+## Instalar a extensão no Chrome
 
-A versão 2.2 não impõe um teto de 500 itens ou requisições. Continua até processar os IDs disponíveis ou ser parada, pausada ou interrompida por um erro. Não há requisições simultâneas; o intervalo mínimo continua sendo 800 ms entre itens, além do tempo de rede, rolagem e esperas do X. Ao receber HTTP 429, aguarda o reset e tenta o mesmo ID novamente; não contorna o limite.
+1. Use a pasta pronta `dist/tweet-cleaner` ou gere com `npm run package`.
+2. Abra `chrome://extensions` e ative **Modo do desenvolvedor**.
+3. Clique **Carregar sem compactação** e selecione a pasta `dist/tweet-cleaner`, que contém `manifest.json`.
+4. Fixe o ícone da extensão. Abra o próprio perfil da conta conectada no X.
+5. Clique no ícone e em **Abrir painel nesta aba**.
 
-O lote encontrado fica salvo localmente como IDs e tipos de operação, separado por conta, aba e modo. Sobrevive a atualizações da página. Falhas continuam pendentes; sucessos são retirados do lote. Uma nova simulação substitui o lote pendente da fonte atual. Carregar novos arquivos também substitui o lote anterior.
+O pacote ZIP é para envio à loja; para instalação local, selecione a pasta extraída. Nenhuma exclusão começa ao instalar ou abrir o painel.
 
-Para atualizar da versão 2.1, clique **Parar**, espere os controles ficarem disponíveis, atualize a aba e cole o script 2.2. O histórico de exclusões e os IDs pendentes da versão 2.1 são preservados, desde que você use a mesma conta no mesmo navegador/origem. Desmarque **Simular primeiro** para retomar a exclusão. A simulação 2.0 não salvava IDs pendentes.
+## Usar o painel
 
-Não é necessário descer toda a página previamente: o script rola aos poucos enquanto processa o que aparece. O X pode deixar de exibir posts antigos; uma rodada sem novos IDs **não comprova** que o histórico inteiro foi removido. O script não troca de aba nem recarrega automaticamente.
+1. Escolha **Página aberta no X** ou **Arquivo do X no computador**.
+2. **Prévia sem apagar** começa marcada. Clique **Encontrar posts** para salvar IDs sem excluir. Você pode **Parar** antes de terminar; a lista parcial fica salva.
+3. Para apagar, desmarque a prévia e clique **Excluir e continuar**. Confirme a frase que identifica a conta conectada. A execução usa os IDs já encontrados e depois continua buscando na página. Sem lista salva, **Excluir disponíveis** busca e exclui diretamente.
+4. Deixe a aba aberta e o computador acordado. **Pausar**, **Retomar** e **Parar** respondem também durante a espera pelo X. Uma requisição já enviada pode terminar após parar.
+5. O botão de minimizar conserva um controle com o estado e a contagem da rodada. Clique nele para reabrir.
+6. Exporte o relatório se precisar. Ao terminar, atualize o perfil para conferir os restantes e execute também nas abas **Respostas** e **Reposts**. A troca de abas é manual.
 
-## Arquivo local para alcançar posts antigos
+Os números principais descrevem a execução atual; **ações salvas** é o histórico acumulado no navegador. Não há uma porcentagem de conclusão: a página não fornece o total acessível de posts. Uma rodada sem novos IDs não comprova que todo o histórico foi removido.
 
-No painel, selecione **Arquivo local (histórico)** e escolha `data/tweets.js` ou os arquivos divididos `tweets-part*.js`. Vários arquivos podem ser selecionados juntos e IDs repetidos são deduplicados. O arquivo é lido como JSON, nunca executado e nunca enviado a um serviço externo. Todas as entradas são processadas, incluindo respostas à própria conta e reposts, por seus IDs de exportação. Caso reposts permaneçam, faça uma rodada na aba Reposts.
+A ferramenta não impõe o teto de 500. As requisições são sequenciais, com no mínimo 800 ms entre itens, além do tempo de rede, rolagem e esperas. HTTP 429 exibe uma contagem regressiva, aguarda o reset informado pelo X (ou 15 minutos quando ausente) e tenta o mesmo ID novamente. Isso não contorna os limites nem garante ausência de restrições da conta.
 
-O arquivo do X é uma fotografia do momento da exportação: posts posteriores precisam de outra rodada pela página ou de um arquivo mais recente.
+## Arquivo local e retomada
 
-## Retomada e privacidade
+Selecione `data/tweets.js` ou arquivos divididos `tweets-part*.js`. Vários arquivos são deduplicados. São lidos como JSON, nunca executados nem enviados a um serviço do desenvolvedor. Todas as entradas são processadas, incluindo respostas e reposts, por seus IDs de exportação. Reposts restantes podem exigir uma rodada na aba Reposts.
 
-Os IDs de ações concluídas e os IDs do lote pendente ficam em `localStorage`, separados por conta e por operação. O texto dos tweets e credenciais não ficam salvos pelo script. Após atualizar ou fechar a aba, cole novamente o script e inicie uma nova rodada: os IDs concluídos são pulados. Falhas são tentadas novamente na rodada seguinte.
+O arquivo representa o momento da exportação: posts posteriores precisam de outra rodada. O modo de página rola aos poucos e pode não alcançar posts antigos que o X omite.
 
-Uma trava do navegador impede duas execuções simultâneas na mesma conta/origem. A conta conectada precisa estar identificável no link Perfil e corresponder ao perfil aberto; o script verifica isso antes de cada ação.
+IDs concluídos e pendentes ficam no `localStorage` do site, separados por conta e operação. Não há texto de tweets nem tokens no progresso. Após recarregar a aba, abra novamente o painel para retomar. Falhas ficam pendentes; sucessos são pulados. Uma nova prévia ou a seleção de novos arquivos substitui a lista pendente da fonte atual. A lista não é sincronizada entre navegadores.
 
-O relatório exportado contém IDs, contagens, conta e falhas, sem texto dos tweets ou cookies. Ele fica apenas no computador. Não envie seu arquivo de dados, cookies, cabeçalhos privados ou relatórios ao GitHub.
+Uma trava impede execuções concorrentes na mesma conta e origem. A conta identificada no link Perfil deve corresponder ao perfil aberto; isso é verificado antes de cada ação. Nenhum usuário pessoal é fixado no código ou nas configurações.
 
-## Limites e compatibilidade
+Para atualizar da versão 2.1/2.2: pare a execução antiga, espere encerrar, atualize a extensão e recarregue a aba do X. Os dados locais anteriores continuam compatíveis na mesma origem e perfil do navegador. Desmarque a prévia para retomar exclusões pendentes.
 
-- A exclusão é permanente. A simulação é opcional; a confirmação explícita antes de excluir é obrigatória. A simulação encontra IDs, mas não testa a API.
-- O X alerta que automação por scripts do site pode resultar em suspensão permanente. Este script usa endpoints internos com a sessão do navegador; respeitar o teto e as respostas de limite **não elimina esse risco**. Veja as [regras de automação](https://help.x.com/en/rules-and-policies/x-automation).
-- O script usa endpoints internos do X, herdados do projeto original. Eles podem mudar sem aviso. **A compatibilidade com a API atual do X não foi validada em uma exclusão real nesta versão.**
-- HTTP 401/403/404 interrompe a execução. O script não finge que um endpoint inexistente significa tweet já removido.
-- Uma resposta 2xx só é contada como sucesso quando contém o campo de resultado esperado da operação. Uma resposta inesperada é registrada como falha.
-- HTTP 429 espera até o horário de reset informado pelo X, sem contornar o limite. Erros de rede e servidor têm tentativas limitadas e espera crescente. Pausa/parada respondem também durante a espera.
-- Chrome recente é necessário para Web Locks e timeout de requisições. A aba precisa permanecer aberta e o computador acordado.
-- Curtidas, mensagens, seguidores e dados do perfil não fazem parte deste script.
-- A versão de console abre o painel uma vez por carregamento da página. Para reexibir: `TweetCleaner.show()`. Para parar pelo console: `TweetCleaner.stop()`.
+## Privacidade e compatibilidade
 
-Se aparecer um erro de API, exporte o relatório e registre apenas o código HTTP e a mensagem do painel. Não publique credenciais para tentar resolver.
+- A exclusão é permanente e exige confirmação. A prévia encontra IDs, mas não testa a API de exclusão.
+- O X alerta que automação por scripts do site pode resultar em suspensão. Consulte as [regras de automação](https://help.x.com/en/rules-and-policies/x-automation).
+- Endpoints internos do X podem mudar sem aviso. O script de console anterior já foi usado, mas **a nova extensão ainda precisa de teste ao vivo em uma conta de teste**. Os testes desta versão usam DOM e respostas fictícios.
+- HTTP 401/403/404 interrompe a execução. Respostas ambiguamente bem-sucedidas nunca são contadas como exclusões confirmadas. Erros de rede/servidor têm tentativas limitadas e espera crescente.
+- Chrome recente é necessário. Não há limpeza em segundo plano com a aba fechada.
+- Curtidas, mensagens, seguidores e dados do perfil não são removidos.
+- O relatório exportado contém conta, IDs, contagens e falhas. Não inclui textos ou cookies. Não publique relatórios, dados do X ou credenciais no GitHub.
 
-## Userscript opcional
+Leia a [política de privacidade](extension/privacy.html), que explica o processamento local e a autenticação enviada somente ao X. Não há servidor de coleta do desenvolvedor. Desinstalar a extensão não limpa o armazenamento do X nem desfaz exclusões.
 
-`tweetdelete.user.js` é gerado a partir da mesma base. Em um gerenciador compatível (Tampermonkey, por exemplo), abre-se pelo comando **Abrir Tweet Cleaner** no menu da extensão, enquanto estiver no próprio perfil. Não começa a apagar automaticamente.
+## Publicar na Chrome Web Store
 
-## Desenvolvimento e verificação
+O [guia de instalação e publicação](docs/CHROME-WEB-STORE.md) explica o cadastro, a taxa única do Google, upload do ZIP, imagens, privacidade e submissão para revisão. A [ficha preparada](docs/STORE-LISTING.md) contém descrição e justificativas de permissões. Contato do publicador, URL pública da política e teste real ainda precisam ser definidos antes de submeter. Não há publicação automática.
 
-Sem dependências externas:
+## Console e userscript
+
+`delete-tweets.js` continua independente: copie o conteúdo completo do arquivo (não um diff) e cole no Console enquanto estiver no próprio perfil. O painel também pode ser aberto por `tweetdelete.user.js` no comando **Abrir Tweet Cleaner** de um gerenciador de userscripts compatível.
+
+A versão de console abre uma vez por carregamento; use `TweetCleaner.show()` para reabrir ou `TweetCleaner.stop()` para parar. Ao trocar de versão, pare e recarregue a página antes. Não execute simultaneamente o console antigo e a extensão nova.
+
+## Desenvolvimento
 
 ```sh
 npm test
 npm run build
+npm run package
 node --check delete-tweets.js
 ```
 
-Testes unitários e de execução com DOM/rede simulados verificam parsing, precisão de IDs, rejeição de hosts falsos, sucesso explícito, erros, simulação, retomada, troca de conta e destino das requisições. Eles não substituem um teste real de compatibilidade com o X.
+Build sem dependências externas: gera o userscript e `dist/tweet-cleaner` a partir do mesmo motor. O pacote inclui apenas os arquivos de execução e a licença. Manifest V3, `activeTab` e `scripting`; sem acesso permanente a todos os sites, código remoto, analytics ou sincronização.
 
-## Origem e referências
+Para regenerar os ícones originais e a imagem promocional: `python scripts/assets.py` (requer Pillow). Para a demonstração local: `node scripts/preview.cjs` e sirva `artifacts/preview` por HTTP local. Ela usa dados fictícios e nunca envia requisições ao X. A demonstração não faz parte do ZIP.
 
-Base clonada: `backzso/tweetdelete`, commit `b824c2a76f21aaf06acc2a3e735be98fc0bf831d`. Histórico Git e licença original preservados.
+Os testes verificam parsing, IDs, hosts, sucesso explícito, erros, prévia, retomada, conta, limites, estado da interface e abertura do popup. Não substituem um teste real no X.
 
-Também foram consultadas as instruções de [oli-dev0/tweet-clear](https://github.com/oli-dev0/tweet-clear) e [kylesnav/x-deleter](https://github.com/kylesnav/x-deleter), como referências de retomada e uso do arquivo de dados. Nenhum código desses dois projetos foi copiado.
+## Origem
 
-Veja [CHANGELOG.md](CHANGELOG.md) para as mudanças da versão.
+Base: `backzso/tweetdelete`, commit `b824c2a76f21aaf06acc2a3e735be98fc0bf831d`, com histórico Git e licença original preservados. Instruções de [oli-dev0/tweet-clear](https://github.com/oli-dev0/tweet-clear) e [kylesnav/x-deleter](https://github.com/kylesnav/x-deleter) foram referências; nenhum código desses dois projetos foi copiado.
+
+Veja [CHANGELOG.md](CHANGELOG.md) para as mudanças.

@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Tweet Cleaner
-// @namespace    https://github.com/gusthanks/tweet-cleaner
-// @version      2.2.0
-// @description  Limpeza com simulação, retomada e confirmação explícita.
+// @namespace    urn:tweet-cleaner
+// @version      3.0.0
+// @description  Limpeza com prévia, retomada e confirmação explícita.
 // @match        https://x.com/*
 // @grant        GM_registerMenuCommand
 // @run-at       document-idle
@@ -12,7 +12,7 @@ GM_registerMenuCommand('Abrir Tweet Cleaner', () => {
 /* MIT; derived from backzso/tweetdelete (c) 2026 backzso. */
 (function(root){
 'use strict';
-const VERSION='2.2.0';
+const VERSION='3.0.0';
 const QUERY={tweet:'VaenaVgh5q5ih7kvyVjgtg',retweet:'iQtK4dl5hBmXewYZuEOKVw'};
 const BEARER='AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA';
 function validHost(host){return ['x.com','www.x.com','twitter.com','www.twitter.com'].includes(host);}
@@ -36,15 +36,15 @@ function checkpoint(raw){if(!raw)return new Set();const v=JSON.parse(raw);if(v.v
 const core={validHost,parseLink,parseArchive,classify,rateWait,checkpoint};
 if(typeof module!=='undefined'&&module.exports){module.exports=core;return;}
 const doc=root.document;
-if(!validHost(root.location.hostname)){root.alert('Abra seu perfil em x.com.');return;}
-if(root.TweetCleaner){root.TweetCleaner.show();return;}
+if(!validHost(root.location.hostname)){root.alert('Abra seu perfil em x.com.');return {error:'Abra seu perfil em x.com.'};}
+if(root.TweetCleaner){root.TweetCleaner.show();return {opened:true,version:VERSION};}
 function identity(){
  const href=doc.querySelector('a[data-testid="AppTabBar_Profile_Link"]')?.getAttribute('href');
  const handle=/^\/([A-Za-z0-9_]+)$/.exec(href||'')?.[1]?.toLowerCase();const p=root.location.pathname.split('/');
  if(!handle||p[1]?.toLowerCase()!==handle||!['',undefined,'with_replies','retweets','reposts','media'].includes(p[2]))throw Error('Abra o perfil da conta conectada. A identidade precisa estar visível.');return handle;
 }
 let account,done;
-try{account=identity();done=checkpoint(root.localStorage.getItem('tweet-cleaner:v2:'+account));}catch(e){root.alert(e.message);return;}
+try{account=identity();done=checkpoint(root.localStorage.getItem('tweet-cleaner:v2:'+account));}catch(e){root.alert(e.message);return {error:e.message};}
 const key='tweet-cleaner:v2:'+account;
 const previewKey=key+':preview';
 const sourceKey=()=>el('mode').value+':'+root.location.pathname;
@@ -55,19 +55,63 @@ try {
  if(saved&&typeof saved.source==='string'&&Array.isArray(saved.items)&&saved.items.every(t=>/^\d+$/.test(t.id)&&['tweet','retweet'].includes(t.kind))){previewSource=saved.source;preview=new Map(saved.items.map(t=>[t.kind+':'+t.id,t]));}
 }catch(e){ /* Invalid pending cache is discarded, never used for deletion. */ }
 const stats={deleted:0,gone:0,failed:0,skipped:0,scanned:0,requests:0},failures=new Map(),attempted=new Set();
-const host=doc.createElement('div');host.style.cssText='position:fixed;right:12px;bottom:12px;z-index:2147483647;max-width:calc(100vw - 24px)';
+const host=doc.createElement('div');host.id='tweet-cleaner-panel';host.style.cssText='position:fixed;right:16px;bottom:16px;z-index:2147483647;max-width:calc(100vw - 32px)';
 const shadow=host.attachShadow({mode:'open'});
-shadow.innerHTML=`<style>:host{font:14px system-ui}section{background:#15202b;color:#fff;border:1px solid #536471;border-radius:14px;padding:16px;width:330px;max-width:calc(100vw - 60px);box-shadow:0 6px 24px #0008}h2{margin:0 0 8px;font-size:18px}button,select,input{margin:4px 3px 4px 0}button{padding:7px;border:0;border-radius:6px;cursor:pointer}button:disabled{opacity:.5}p{line-height:1.4}pre{white-space:pre-wrap;font:12px system-ui;max-height:100px;overflow:auto}</style>
-<section><h2>Tweet Cleaner ${VERSION}</h2><p id="account"></p>
-<select id="mode"><option value="timeline">Página atual (sem arquivo)</option><option value="archive">Arquivo local (histórico)</option></select>
-<input id="files" type="file" accept=".js,.json" multiple hidden><label><input id="dry" type="checkbox" checked>Simular primeiro</label>
-<p>Execução contínua, com espera automática nos limites do X. Exclusão permanente. A página pode omitir posts antigos.</p>
-<button id="start">Iniciar</button><button id="pause" disabled>Pausar</button><button id="stop" disabled>Parar</button><button id="report">Exportar relatório</button><button id="hide">Ocultar</button>
-<p id="stats"></p><pre id="status">Pronto. A simulação não apaga nada.</pre></section>`;
-doc.body.appendChild(host);const el=id=>shadow.getElementById(id);el('account').textContent='@'+account+' · '+done.size+' ações concluídas salvas';
-function update(message){el('stats').textContent=`Excluídos: ${stats.deleted} · já ausentes: ${stats.gone} · falhas: ${stats.failed}\nEncontrados: ${stats.scanned} · retomada: ${stats.skipped}\nRequisições: ${stats.requests} · IDs pendentes: ${preview.size}`;if(message)el('status').textContent=message;}
+shadow.innerHTML=`<style>
+:host{all:initial;color-scheme:dark;font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;color:#edf3f7}
+*{box-sizing:border-box} [hidden]{display:none!important}
+section{--surface:#15202b;--muted:#b4c2cd;--line:#354654;background:var(--surface);border:1px solid #455866;border-radius:16px;width:384px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 32px);overflow:auto;box-shadow:0 12px 40px #0006}
+header{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.mark{width:36px;height:36px;flex-shrink:0;color:#8bc8fd}h2{font-size:18px;letter-spacing:-.3px;line-height:1.3;margin:0}header p{margin:4px 0 0;font-size:12px;color:var(--muted)}
+.title{flex:1}.icon-button{flex:0 0 44px;padding:0;font-size:22px;background:transparent;color:var(--muted)}
+.body{padding:16px 20px;display:grid;gap:16px}p{margin:0}button,input,select{font:inherit}
+button{min-height:44px;border:1px solid var(--line);border-radius:8px;background:#202f3b;color:#edf3f7;padding:10px 14px;font-weight:600;cursor:pointer;transition:background 150ms}
+button:hover:not(:disabled){background:#2d4050}button:active:not(:disabled){background:#384f62}button:disabled{opacity:.45;cursor:default}
+:is(button,select,input,summary):focus-visible{outline:3px solid #9dd3ff;outline-offset:3px}
+.field-label{display:block;font-size:13px;font-weight:600;margin-bottom:8px}select{width:100%;min-height:44px;background:#101923;color:#edf3f7;border:1px solid #526775;border-radius:8px;padding:8px 12px}
+.file-field{margin-top:12px}.file-field input{width:100%;font-size:12px;min-height:44px}.file-field input::file-selector-button{border:1px solid var(--line);padding:8px;background:#202f3b;color:#edf3f7;border-radius:6px;margin-right:8px}
+.hint{font-size:12px;color:var(--muted);margin-top:8px}.check{display:flex;align-items:center;gap:12px;min-height:44px;cursor:pointer}.check input{accent-color:#8bc8fd;width:18px;height:18px;margin:0;flex-shrink:0}.check strong{display:block;font-size:13px}.check small{display:block;color:var(--muted);font-size:12px}
+.status-box{border-left:1px solid #8bc8fd;padding:2px 0 2px 12px}.state{font-size:12px;font-weight:700;color:#8bc8fd;display:flex;align-items:center;gap:8px}.dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}.status-box p{font-size:13px;margin-top:6px;overflow-wrap:anywhere}
+.status-box[data-phase="waiting"]{border-color:#efc77b}.status-box[data-phase="waiting"] .state{color:#efc77b}.status-box[data-phase="error"]{border-color:#ffaaa5}.status-box[data-phase="error"] .state{color:#ffaaa5}.status-box[data-phase="complete"]{border-color:#a1d6b7}.status-box[data-phase="complete"] .state{color:#a1d6b7}
+#countdown{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+dl{margin:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 12px}dl div{display:flex;flex-direction:column;gap:4px}dt{font-size:12px;color:var(--muted)}dd{order:-1;margin:0;font-size:22px;font-weight:650;font-variant-numeric:tabular-nums;line-height:1.2;overflow-wrap:anywhere}.minor{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--muted);margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.primary{grid-column:1/-1;background:#8bc8fd;color:#0a1d2c;border-color:#8bc8fd}.primary:hover:not(:disabled){background:#b2daff}.primary:active:not(:disabled){background:#73b5ee}.primary.danger{background:#ffb1aa;border-color:#ffb1aa;color:#39130f}.primary.danger:hover:not(:disabled){background:#ffcdc8}.primary.danger:active:not(:disabled){background:#f39a92}
+.footer{display:grid;grid-template-columns:auto 1fr;gap:0 12px;border-top:1px solid var(--line);padding-top:12px}.footer #account{grid-column:1/-1;margin:0 0 4px}.footer details{min-width:0}.footer details[open]{grid-column:1/-1}.footer summary{justify-content:flex-end}.footer details[open] summary{justify-content:flex-start}.text-button{font-size:12px;padding:8px 0;background:none;border-color:transparent;color:var(--muted)}.text-button:hover:not(:disabled){background:none;color:#edf3f7;text-decoration:underline}
+details{font-size:12px;color:var(--muted)}summary{cursor:pointer;min-height:44px;display:flex;align-items:center;gap:8px}summary::before{content:'+';font-size:16px}details[open] summary::before{content:'−'}details p{margin-bottom:10px}details a{color:#a8d5ff}
+#mini{max-width:calc(100vw - 32px);box-shadow:0 8px 28px #0006;border-color:#455866;text-align:left}.mini-title{display:block}.mini-state{display:block;font-size:12px;font-weight:400;color:#b4c2cd;overflow-wrap:anywhere}
+@media(max-width:380px){header,.body{padding:16px}.body{gap:16px}dl{gap:12px 8px}dd{font-size:20px}}
+@media(prefers-reduced-motion:reduce){button{transition:none}}
+</style>
+<section id="panel" role="region" aria-label="Tweet Cleaner">
+<header><svg class="mark" viewBox="0 0 36 36" fill="none" aria-hidden="true"><rect x="5" y="5" width="24" height="28" rx="5" stroke="currentColor" stroke-width="2"/><path d="M11 13h12M11 19h8M23 4v6M20 7h6M24 24l3 3 5-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="title"><h2>Tweet Cleaner</h2><p>Gratuito · v${VERSION}</p></div><button id="hide" class="icon-button" aria-label="Minimizar painel" title="Minimizar">−</button></header>
+<div class="body">
+<div><label class="field-label" for="mode">Onde buscar</label><select id="mode" aria-describedby="source-hint"><option value="timeline">Página aberta no X</option><option value="archive">Arquivo do X no computador</option></select><p class="hint" id="source-hint">Busca enquanto rola a página. Posts antigos podem não aparecer.</p><div id="file-field" class="file-field" hidden><label class="field-label" for="files">Arquivos de posts</label><input id="files" type="file" accept=".js,.json" multiple><p class="hint" id="file-info">Selecione tweets.js ou tweets-part*.js.</p></div></div>
+<label class="check" for="dry"><input id="dry" type="checkbox" checked><span><strong>Prévia sem apagar</strong><small>Salva os IDs para excluir depois, sem repetir a busca.</small></span></label>
+<div id="status-box" class="status-box" data-phase="ready"><div class="state"><span class="dot" aria-hidden="true"></span><span id="phase">Pronto para começar</span></div><p id="status" role="status" aria-live="polite">Faça uma prévia ou desmarque a opção para excluir diretamente.</p><p id="countdown" hidden></p></div>
+<div><dl aria-label="Progresso desta execução"><div><dt>Excluídos</dt><dd id="deleted">0</dd></div><div><dt>Pendentes</dt><dd id="pending">0</dd></div><div><dt>Falhas</dt><dd id="failed">0</dd></div><div><dt>Encontrados</dt><dd id="scanned">0</dd></div><div><dt>Já ausentes</dt><dd id="gone">0</dd></div><div><dt>Já processados</dt><dd id="skipped">0</dd></div></dl><div class="minor"><span id="requests">0 requisições</span><span id="completed">0 ações salvas</span></div></div>
+<div class="actions"><button id="start" class="primary">Encontrar posts</button><button id="pause" disabled>Pausar</button><button id="stop" disabled>Parar</button></div>
+<div class="footer"><p class="hint" id="account"></p><button id="report" class="text-button">Exportar relatório</button><details><summary>Como funciona e cuidados</summary><p>A exclusão é permanente e exige confirmação da conta. A prévia não envia exclusões.</p><p>Sem teto de itens. Ao receber um limite do X, aguarda e retoma automaticamente. Deixe esta aba aberta e o computador acordado.</p><p>Execute também nas abas Respostas e Reposts. O arquivo do X pode alcançar posts que a página não mostra.</p><p>Os IDs e o progresso ficam no armazenamento local deste site. Não há servidor de coleta nem anúncios.</p><p>O X pode restringir automação pela interface. <a href="https://help.x.com/en/rules-and-policies/x-automation" target="_blank" rel="noopener noreferrer">Regras de automação do X</a>.</p></details></div>
+</div></section><button id="mini" hidden aria-label="Expandir Tweet Cleaner"><span class="mini-title">Tweet Cleaner</span><span id="mini-state" class="mini-state">Pronto para começar</span></button>`;
+doc.body.appendChild(host);const el=id=>shadow.getElementById(id);
+let phase='ready',message='Faça uma prévia ou desmarque a opção para excluir diretamente.',waitUntil=0;
+const phaseNames={ready:'Pronto para começar',scanning:'Encontrando posts',deleting:'Exclusão em andamento',waiting:'Aguardando o X',paused:'Execução pausada',stopping:'Encerrando',stopped:'Execução parada',complete:'Execução concluída',error:'Execução interrompida'};
+const number=n=>n.toLocaleString('pt-BR');
+function update(nextMessage,nextPhase){
+ if(nextMessage)message=nextMessage;if(nextPhase)phase=nextPhase;
+ const shown=stopped&&busy?'stopping':paused&&busy?'paused':phase;
+ if(el('phase').textContent!==phaseNames[shown])el('phase').textContent=phaseNames[shown];el('status-box').dataset.phase=shown;
+ const statusText=shown==='paused'?'Pausado após a requisição atual. Clique Retomar para continuar.':message;
+ if(el('status').textContent!==statusText)el('status').textContent=statusText;
+ for(const name of ['deleted','gone','failed','skipped','scanned'])el(name).textContent=number(stats[name]);
+ el('pending').textContent=number(previewSource===sourceKey()?preview.size:0);
+ el('requests').textContent=number(stats.requests)+' requisições';el('completed').textContent=number(done.size)+' ações salvas';
+ el('account').textContent='Conta conectada: @'+account;
+ el('countdown').hidden=!waitUntil||shown!=='waiting';
+ if(waitUntil){const seconds=Math.max(0,Math.ceil((waitUntil-Date.now())/1000));el('countdown').textContent='Retomada automática em '+Math.floor(seconds/60)+'min '+String(seconds%60).padStart(2,'0')+'s';}
+ el('mini-state').textContent=phaseNames[shown]+' · '+number(stats.deleted)+' excluídos';
+}
 function savePreview(){root.localStorage.setItem(previewKey,JSON.stringify({source:previewSource,items:[...preview.values()]}));}
-async function wait(ms){const end=Date.now()+ms;while(!stopped&&(Date.now()<end||paused))await new Promise(r=>root.setTimeout(r,250));}
+async function wait(ms){const end=Date.now()+ms;let last=-1;while(!stopped&&(Date.now()<end||paused)){if(waitUntil&&Math.floor(Date.now()/1000)!==last){last=Math.floor(Date.now()/1000);update();}await new Promise(r=>root.setTimeout(r,250));}}
 function assertAccount(){if(identity()!==account)throw Error('A conta ou página mudou. Execução interrompida.');}
 function save(item){done.add(item.kind+':'+item.id);root.localStorage.setItem(key,JSON.stringify({version:1,done:[...done]}));}
 async function remove(item){
@@ -81,7 +125,7 @@ async function remove(item){
   try{response=await root.fetch('https://x.com/i/api/graphql/'+queryId+'/'+op,{method:'POST',credentials:'include',signal:AbortSignal.timeout(30000),headers:{authorization:'Bearer '+BEARER,'x-csrf-token':csrf,'content-type':'application/json','x-twitter-auth-type':'OAuth2Session','x-twitter-active-user':'yes'},body:JSON.stringify({queryId,variables})});}
   catch(e){if(attempt===3)return 'failed';update('Falha de rede. Tentando novamente…');await wait(2000*2**attempt);continue;}
   const body=await response.json().catch(()=>null),result=classify(response.status,body,item.kind);
-  if(result==='rate'){const ms=rateWait(response.headers.get('x-rate-limit-reset'),Date.now());update('Limite do X. Retomada após '+new Date(Date.now()+ms).toLocaleTimeString());await wait(ms);attempt--;continue;}
+  if(result==='rate'){const ms=rateWait(response.headers.get('x-rate-limit-reset'),Date.now());waitUntil=Date.now()+ms;update('O X pediu uma pausa. A lista está salva; a exclusão retoma automaticamente.','waiting');await wait(ms);waitUntil=0;if(!stopped)update('Excluindo os posts disponíveis. O progresso é salvo a cada sucesso.','deleting');attempt--;continue;}
   if(result==='fatal')throw Error(`X respondeu HTTP ${response.status}. Sessão ou API incompatível; nenhuma conclusão de sucesso foi registrada.`);
   if(result==='retry'&&attempt<3){await wait(2000*2**attempt);continue;}
   return result==='retry'?'failed':result;
@@ -100,43 +144,49 @@ async function process(items){
   attempted.add(id);stats.scanned++;
   if(done.has(id)){stats.skipped++;preview.delete(id);savePreview();update();continue;}
   preview.set(id,item);savePreview();
-  if(dry){update('Simulação: IDs salvos para excluir sem repetir a varredura.');continue;}
+  if(dry){update('Prévia: IDs salvos para excluir sem repetir a busca.','scanning');continue;}
+  if(phase!=='deleting')update('Excluindo os posts disponíveis. O progresso é salvo a cada sucesso.','deleting');
   const result=await remove(item);if(result==='ok'||result==='gone'){save(item);preview.delete(id);savePreview();result==='ok'?stats.deleted++:stats.gone++;failures.delete(id);}else if(result!=='stopped'){stats.failed++;failures.set(id,result);}
   update();await wait(800);
  }
 }
 async function run(){
  const cached=!dry&&preview.size>0;
- if(cached){update('Excluindo os IDs já encontrados; depois a busca continua automaticamente.');await process([...preview.values()]);}
+ if(cached){update('Excluindo os IDs já encontrados; depois a busca continua automaticamente.','deleting');await process([...preview.values()]);}
  if(el('mode').value==='archive'){if(queue.length)await process(queue);else if(!cached)throw Error('Selecione arquivos tweets.js/tweets-part*.js.');}
  else if(!stopped){root.scrollTo(0,0);await wait(700);let idle=0,passes=0;
   while(!stopped&&idle<12){assertAccount();const before=attempted.size;await process(visibleItems());if(stopped)break;const bottom=root.scrollY+root.innerHeight>=doc.documentElement.scrollHeight-100;idle=bottom&&attempted.size===before?idle+1:0;root.scrollBy(0,Math.round(root.innerHeight*.65));await wait(1500);if(++passes>20000)throw Error('Limite de varredura atingido. Exporte o relatório e reinicie.');}
  }
- update(dry?`${preview.size} IDs salvos. Desmarque Simular primeiro e clique Excluir e continuar; não é preciso terminar a varredura.`:stopped?'Parado. Uma requisição já enviada pode terminar; progresso salvo.':`Execução concluída com ${stats.failed} falhas. Atualize o perfil para conferir restantes. Posts antigos podem exigir o arquivo do X.`);
+ waitUntil=0;
+ update(stopped?'Parado. Os IDs encontrados e o progresso foram salvos.':dry?`${number(preview.size)} IDs salvos. Desmarque Prévia sem apagar e clique Excluir e continuar.`:`Execução concluída com ${stats.failed} falhas. Atualize o perfil para conferir restantes. Posts antigos podem exigir o arquivo do X.`,stopped?'stopped':'complete');
 }
-function startLabel(){el('start').textContent=el('dry').checked?'Simular':previewSource===sourceKey()&&preview.size?'Excluir e continuar':'Excluir disponíveis';}
-el('dry').onchange=startLabel;
-el('mode').onchange=()=>{el('files').hidden=el('mode').value!=='archive';startLabel();};
-el('files').onchange=async()=>{queue=[];try{const combined=new Map();for(const file of el('files').files)for(const item of parseArchive(await file.text()))combined.set(item.id,item);queue=[...combined.values()];preview.clear();previewSource=sourceKey();savePreview();startLabel();update(queue.length+' IDs únicos carregados localmente.');}catch(e){update(e.message);}};
+function startLabel(){el('start').textContent=el('dry').checked?'Encontrar posts':previewSource===sourceKey()&&preview.size?'Excluir e continuar':'Excluir disponíveis';el('start').className='primary'+(el('dry').checked?'':' danger');}
+el('dry').onchange=()=>{startLabel();update(el('dry').checked?'A prévia encontra e salva IDs. Nenhuma exclusão é enviada.':'A exclusão é permanente. Você confirmará a conta antes de começar.','ready');};
+el('mode').onchange=()=>{const archive=el('mode').value==='archive';el('file-field').hidden=!archive;el('source-hint').textContent=archive?'O arquivo é lido localmente e nunca é enviado.':'Busca enquanto rola a página. Posts antigos podem não aparecer.';startLabel();update('Fonte alterada. Escolha prévia ou exclusão para começar.','ready');};
+el('files').onchange=async()=>{queue=[];try{const combined=new Map();for(const file of el('files').files)for(const item of parseArchive(await file.text()))combined.set(item.id,item);queue=[...combined.values()];preview.clear();previewSource=sourceKey();savePreview();startLabel();el('file-info').textContent=number(queue.length)+' IDs únicos carregados.';update(queue.length+' IDs únicos carregados localmente.','ready');}catch(e){el('file-info').textContent='Não foi possível ler os arquivos.';update(e.message,'error');}};
 el('start').onclick=async()=>{
- if(busy)return;dry=el('dry').checked;try{assertAccount();}catch(e){update(e.message);return;}
- if(el('mode').value==='archive'&&!queue.length&&!(previewSource===sourceKey()&&preview.size)){update('Selecione os arquivos primeiro.');return;}
+ if(busy)return;dry=el('dry').checked;try{assertAccount();}catch(e){update(e.message,'error');return;}
+ if(el('mode').value==='archive'&&!queue.length&&!(previewSource===sourceKey()&&preview.size)){update('Selecione os arquivos primeiro.','error');return;}
  if(!dry&&root.prompt(`Excluir continuamente os itens disponíveis de @${account}, aguardando os limites do X? A automação do site pode resultar em suspensão pelo X. Digite EXCLUIR @${account} para iniciar.`)!=='EXCLUIR @'+account)return;
- if(!root.navigator.locks){update('Use Chrome atualizado: este navegador não oferece trava de execução.');return;}
+ if(!root.navigator.locks){update('Use Chrome atualizado: este navegador não oferece trava de execução.','error');return;}
  await root.navigator.locks.request(key,{ifAvailable:true},async lock=>{
-  if(!lock){update('Já existe uma execução nesta conta em outra aba.');return;}
-  try{done=checkpoint(root.localStorage.getItem(key));}catch(e){update(e.message);return;}
-  try{if(previewSource!==sourceKey()||dry){preview.clear();previewSource=sourceKey();savePreview();}}catch(e){update('Interrompido: '+e.message);return;}
+  if(!lock){update('Já existe uma execução nesta conta em outra aba.','error');return;}
+  try{done=checkpoint(root.localStorage.getItem(key));}catch(e){update(e.message,'error');return;}
+  try{if(previewSource!==sourceKey()||dry){preview.clear();previewSource=sourceKey();savePreview();}}catch(e){update('Interrompido: '+e.message,'error');return;}
   busy=true;stopped=false;paused=false;attempted.clear();Object.keys(stats).forEach(k=>stats[k]=0);failures.clear();
   ['start','mode','files','dry'].forEach(id=>el(id).disabled=true);el('pause').disabled=el('stop').disabled=false;el('pause').textContent='Pausar';
-  try{await run();}catch(e){update('Interrompido: '+e.message);}finally{busy=false;['start','mode','files','dry'].forEach(id=>el(id).disabled=false);el('pause').disabled=el('stop').disabled=true;startLabel();}
+  update(dry?'Encontrando IDs sem apagar. Você pode parar e usar a lista parcial.':'Buscando posts para excluir. Cada sucesso fica salvo.',dry?'scanning':'deleting');
+  try{await run();}catch(e){waitUntil=0;phase='error';message='Interrompido: '+e.message;}finally{busy=false;paused=false;['start','mode','files','dry'].forEach(id=>el(id).disabled=false);el('pause').disabled=el('stop').disabled=true;startLabel();update();}
  });
 };
-el('pause').onclick=()=>{paused=!paused;el('pause').textContent=paused?'Retomar':'Pausar';update(paused?'Pausado após a requisição atual.':'Retomando…');};
+el('pause').onclick=()=>{paused=!paused;el('pause').textContent=paused?'Retomar':'Pausar';update();};
 el('stop').onclick=()=>{stopped=true;paused=false;update('Parando após a requisição atual…');};
-el('hide').onclick=()=>{host.style.display='none';};
+el('hide').onclick=()=>{el('panel').hidden=true;el('mini').hidden=false;el('mini').focus();};
+function show(){el('panel').hidden=false;el('mini').hidden=true;host.style.display='';}
+el('mini').onclick=()=>{show();el('hide').focus();};
 el('report').onclick=()=>{const report={version:VERSION,account,date:new Date().toISOString(),mode:el('mode').value,simulation:dry,stats,completed:[...done],pending:[...preview.values()],failures:[...failures]};const url=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'}));const a=doc.createElement('a');a.href=url;a.download='tweet-cleaner-report.json';a.click();root.setTimeout(()=>URL.revokeObjectURL(url),1000);};
-root.TweetCleaner={show:()=>{host.style.display='';},stop:()=>{stopped=true;paused=false;}};startLabel();update();
+root.TweetCleaner={show,stop:()=>{stopped=true;paused=false;}};startLabel();update();
+return {opened:true,version:VERSION};
 })(typeof window==='undefined'?{}:window);
 
 });

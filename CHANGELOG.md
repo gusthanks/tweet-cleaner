@@ -1,5 +1,17 @@
 # Mudanças
 
+## 3.0.0
+
+- Extensão Manifest V3 gratuita com acesso temporário à aba e painel aberto por ação do usuário.
+- Painel com hierarquia, contadores separados, fonte rotulada, ajuda recolhível, foco visível e adaptação a janelas pequenas.
+- Estados claros para prévia, exclusão, espera, pausa, parada, erro e conclusão; contagem regressiva real durante HTTP 429.
+- Corrigida a mensagem de simulação que permanecia durante exclusão e a contagem de ações salvas que não atualizava.
+- Minimização conserva um controle para reabrir e acompanhar o estado.
+- Removidas referências fixas a contas pessoais do código, exemplos, testes e metadados distribuídos.
+- Política de privacidade, roteiro de publicação, ficha da loja, ícones e pacote ZIP.
+- Mantida a execução contínua sem teto de 500 e o progresso compatível com 2.1/2.2.
+- Testes de regressão e popup usam dados e respostas fictícios; nenhum teste exclui posts reais.
+
 ## 2.2.0
 
 - Removido o teto de 500 itens e requisições por execução, a pedido do usuário.

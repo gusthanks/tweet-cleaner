@@ -44,6 +44,6 @@ test('checkpoint rejects corruption and preserves operation types', () => {
   assert.throws(() => core.checkpoint('{"version":1,"done":["secret"]}'));
 });
 test('permalink extracts only main status paths', () => {
-  assert.deepEqual(core.parseLink('/Gusthanks/status/1620593490609704960/photo/1'),{author:'gusthanks',id:'1620593490609704960'});
-  assert.equal(core.parseLink('/search?q=gusthanks/status/1'),null);
+  assert.deepEqual(core.parseLink('/Sample_user/status/1620593490609704960/photo/1'),{author:'sample_user',id:'1620593490609704960'});
+  assert.equal(core.parseLink('/search?q=sample_user/status/1'),null);
 });
