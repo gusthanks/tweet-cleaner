@@ -1,5 +1,13 @@
 # Mudanças
 
+## 3.1.1
+
+- Corrigida a rejeição de `/i/history/likes`, endereço mostrado na captura do usuário. O modo Likes é selecionado automaticamente nessa página.
+- Popup, validação antes de cada requisição e link Abrir a página no X aceitam o Histórico de Likes; a rota antiga do próprio perfil continua compatível.
+- Prévias salvas nas rotas antiga e nova são reaproveitadas para a mesma conta, sem misturar a lista geral com o filtro adulto.
+- Mantidas a confirmação específica, a proteção contra troca de conta e a proibição de excluir posts nas páginas de Likes.
+- 64 testes passaram com DOM e respostas fictícios, incluindo a nova rota, prévia filtrada e interrupção ao trocar de conta.
+
 ## 3.1.0
 
 - Modos separados para remover bookmarks e likes, preservando os posts, com seleção automática pela página aberta.

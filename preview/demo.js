@@ -2,7 +2,7 @@
 let rateNext = false;
 let calls = 0;
 const demoMode = new URLSearchParams(window.location.search).get('mode');
-const demoPath = demoMode === 'likes' ? '/sample_user/likes' : demoMode === 'bookmarks' ? '/i/bookmarks' : '/sample_user';
+const demoPath = demoMode === 'likes' ? '/i/history/likes' : demoMode === 'bookmarks' ? '/i/bookmarks' : '/sample_user';
 if (['likes', 'bookmarks'].includes(demoMode)) {
   for (const article of document.querySelectorAll('article[data-testid="tweet"]')) {
     const marker = document.createElement('button');

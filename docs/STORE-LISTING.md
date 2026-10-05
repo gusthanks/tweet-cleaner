@@ -51,7 +51,7 @@ O filtro adulto lê avisos de mídia na página e registra apenas a indicação 
 4. Clique Encontrar posts, pare a busca e confirme os contadores. Nenhuma requisição de exclusão é enviada em prévia.
 5. Para testar exclusão, publique antes um post descartável na conta de teste. Desmarque a prévia e confirme a frase solicitada. Uma exclusão real não é reversível.
 6. Pause/retome/pare e exporte um relatório. Atualize o perfil para conferir o resultado.
-7. Curta e salve um post descartável. Abra a aba Likes do próprio perfil ou a página principal Bookmarks e invoque a extensão. O modo correspondente deve ser selecionado automaticamente. Faça uma prévia e verifique que nenhuma alteração ocorre.
+7. Curta e salve um post descartável. Abra **Histórico → Likes** (`/i/history/likes`) ou a página principal Bookmarks e invoque a extensão. O modo correspondente deve ser selecionado automaticamente. A rota antiga de Likes do próprio perfil também é aceita. Faça uma prévia e verifique que nenhuma alteração ocorre.
 8. Desmarque a prévia e confirme a frase específica para remover likes ou bookmarks. Atualize a página e confirme que a interação foi retirada, mas o post continua acessível. Repita no outro modo. Os históricos e pendentes devem ser independentes do modo de posts.
 9. Para verificar o filtro, marque Somente conteúdo adulto e faça uma prévia de itens com e sem o aviso explícito do X em português ou inglês. Itens sem o aviso, com aviso genérico ou com texto semelhante dentro do post/citação devem ser preservados. Nenhuma mídia é aberta. A confirmação de remoção filtrada inclui ADULTOS; dados de demonstração não substituem o teste real.
 

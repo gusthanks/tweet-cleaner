@@ -9,7 +9,7 @@ Derivada de [backzso/tweetdelete](https://github.com/backzso/tweetdelete), sob l
 1. Use a pasta pronta `dist/tweet-cleaner` ou gere com `npm run package`.
 2. Abra `chrome://extensions` e ative **Modo do desenvolvedor**.
 3. Clique **Carregar sem compactação** e selecione a pasta `dist/tweet-cleaner`, que contém `manifest.json`.
-4. Fixe o ícone da extensão. Abra o próprio perfil, a aba Likes desse perfil ou a página Bookmarks no X.
+4. Fixe o ícone da extensão. Abra o próprio perfil, **Histórico → Likes** (`/i/history/likes`) ou a página Bookmarks no X.
 5. Clique no ícone e em **Abrir painel nesta aba**.
 
 O pacote ZIP é para envio à loja; para instalação local, selecione a pasta extraída. Nenhuma exclusão começa ao instalar ou abrir o painel.
@@ -29,7 +29,7 @@ A ferramenta não impõe o teto de 500. As requisições são sequenciais, com n
 
 ## Bookmarks e likes
 
-Abra **Bookmarks** pelo menu do X (`/i/bookmarks`) ou **Likes** no próprio perfil (`/seu_usuario/likes`) e invoque a extensão. Esses modos retiram salvos ou curtidas; **não apagam os posts**, mesmo quando você é o autor. O painel confere a página e o tipo de ação antes de cada requisição. Pastas de bookmarks não são atendidas; use a página principal de salvos.
+Abra **Bookmarks** pelo menu do X (`/i/bookmarks`) ou **Histórico → Likes** (`/i/history/likes`) e invoque a extensão. A rota antiga de Likes no próprio perfil (`/seu_usuario/likes`) também continua aceita. Esses modos retiram salvos ou curtidas; **não apagam os posts**, mesmo quando você é o autor. O painel confere a conta conectada, a página e o tipo de ação antes de cada requisição. Pastas de bookmarks não são atendidas; use a página principal de salvos.
 
 A confirmação é específica: `REMOVER BOOKMARKS @sua_conta` ou `REMOVER LIKES @sua_conta`. A frase de exclusão de posts não autoriza essas operações. Prévia, pendentes e histórico ficam separados por modo; uma lista de posts nunca é usada para remover likes ou bookmarks.
 
@@ -55,7 +55,7 @@ IDs concluídos e pendentes ficam no `localStorage` do site, separados por conta
 
 Uma trava impede execuções concorrentes na mesma conta e origem, inclusive entre modos diferentes. A conta identificada no link Perfil deve corresponder ao perfil ou Likes aberto; Bookmarks usa a conta conectada. A página é verificada antes de cada ação. Nenhum usuário pessoal é fixado no código ou nas configurações.
 
-Para atualizar de versões anteriores: pare a execução antiga, espere encerrar, atualize a extensão e recarregue a aba do X. Os IDs de posts das versões 2.1/2.2/3.0 continuam compatíveis na mesma origem e perfil do navegador. Likes e bookmarks têm novos armazenamentos independentes. Desmarque a prévia para retomar ações pendentes.
+Para atualizar de versões anteriores: pare a execução antiga, espere encerrar, atualize a extensão em `chrome://extensions` e recarregue a aba do X. Confirme **v3.1.1** no cabeçalho do painel. Os IDs de posts das versões 2.1/2.2/3.0 continuam compatíveis na mesma origem e perfil do navegador. Likes e bookmarks têm armazenamentos independentes; prévias de Likes da 3.1.0 são reaproveitadas entre a rota antiga e Histórico, mantendo a separação entre listas gerais e filtradas. Desmarque a prévia para retomar ações pendentes.
 
 ## Privacidade e compatibilidade
 

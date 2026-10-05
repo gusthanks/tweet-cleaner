@@ -8,7 +8,7 @@ function isSupportedUrl(value) {
     const url = new URL(value);
     const reserved = new Set(['home', 'explore', 'notifications', 'messages', 'settings', 'i', 'search', 'compose', 'login', 'logout']);
     const match = /^\/([A-Za-z0-9_]+)(?:\/(with_replies|retweets|reposts|media|likes))?\/?$/.exec(url.pathname);
-    const supported = /^\/i\/bookmarks\/?$/.test(url.pathname) || (match && !reserved.has(match[1].toLowerCase()));
+    const supported = /^\/i\/(?:bookmarks|history\/likes)\/?$/.test(url.pathname) || (match && !reserved.has(match[1].toLowerCase()));
     return url.protocol === 'https:' && ['x.com', 'www.x.com', 'twitter.com', 'www.twitter.com'].includes(url.hostname) && supported;
   } catch { return false; }
 }

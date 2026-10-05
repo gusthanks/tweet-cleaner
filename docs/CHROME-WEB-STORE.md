@@ -6,7 +6,7 @@
 2. No Chrome, abra `chrome://extensions`.
 3. Ative **Modo do desenvolvedor**.
 4. Clique **Carregar sem compactação** e selecione `dist/tweet-cleaner`, a pasta que contém `manifest.json`. Não selecione o ZIP.
-5. Fixe o Tweet Cleaner pelo menu de extensões. Abra o próprio perfil, Likes ou Bookmarks no X, clique no ícone e em **Abrir painel nesta aba**.
+5. Fixe o Tweet Cleaner pelo menu de extensões. Abra o próprio perfil, **Histórico → Likes** (`/i/history/likes`) ou Bookmarks no X, clique no ícone e em **Abrir painel nesta aba**.
 
 Não começa a excluir automaticamente. A extensão continua funcionando enquanto a aba está aberta, mesmo se você fechar o popup. Ela não executa em segundo plano com a aba fechada.
 
@@ -19,7 +19,7 @@ A extensão pode ser gratuita para usuários. O Google exige cadastro de desenvo
 1. Entre no [Developer Dashboard](https://chrome.google.com/webstore/devconsole), registre a conta e configure o publicador. Siga o [cadastro oficial](https://developer.chrome.com/docs/webstore/register).
 2. Teste a instalação local em uma conta de teste do X que você controla. Os testes automatizados usam respostas simuladas; não garantem compatibilidade dos endpoints internos com o X ao vivo.
 3. Publique `extension/privacy.html` em uma URL HTTPS pública, acessível sem login. A política dentro do ZIP, sozinha, não substitui o link público solicitado na ficha. Hospedar essa página é um passo separado.
-4. Clique em **New item / Novo item** e envie `dist/tweet-cleaner-3.1.0.zip`. O `manifest.json` fica na raiz desse ZIP; não compacte a pasta do repositório inteiro.
+4. Clique em **New item / Novo item** e envie `dist/tweet-cleaner-3.1.1.zip`. O `manifest.json` fica na raiz desse ZIP; não compacte a pasta do repositório inteiro.
 5. Preencha **Store listing** com `docs/STORE-LISTING.md`. Use o ícone `extension/icons/128.png`, pelo menos uma captura 1280×800 ou 640×400 e a imagem promocional pequena 440×280. As imagens devem representar a experiência real. Os materiais de demonstração deste projeto usam dados fictícios identificados como demonstração.
 6. Em **Privacy**, informe a finalidade única e justifique as duas permissões. Declare com precisão o processamento local de conta, conteúdo, IDs, marcadores de likes/bookmarks e autenticação da sessão, e as requisições enviadas ao X. Não declare que a extensão não usa autenticação: ela lê o token CSRF para operar na sessão já conectada.
 7. Em **Distribution**, escolha distribuição gratuita e a visibilidade desejada. Preencha **Test instructions** conforme o modelo, sem fornecer sua conta pessoal ou cookies.

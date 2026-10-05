@@ -105,3 +105,20 @@ test('filtered interaction requires recorded adult evidence and cannot target po
   assert.equal(core.itemMatchesFilter({id:'1',kind:'tweet',adult:true},'timeline',true),false);
   assert.equal(core.itemMatchesFilter({id:'1',kind:'like'},'likes',false),true);
 });
+
+test('History Likes belongs to the connected account and cannot authorize other modes', () => {
+  for(const path of ['/i/history/likes','/i/history/likes/']){
+    assert.equal(core.scopeAllowed(path,'sample_user','likes'),true);
+    for(const mode of ['timeline','archive','bookmarks'])assert.equal(core.scopeAllowed(path,'sample_user',mode),false);
+  }
+  for(const path of ['/i/history','/i/history/likes/123','/i/history/likesevil','/other/likes'])assert.equal(core.scopeAllowed(path,'sample_user','likes'),false);
+  assert.equal(core.scopeAllowed('/i/history/likes','','likes'),false);
+});
+
+test('Likes aliases retain existing previews without crossing account or filter boundaries', () => {
+  for(const path of ['/sample_user/likes','/sample_user/likes/','/i/history/likes','/i/history/likes/']){
+    assert.equal(core.normalizeSource('likes:'+path,'sample_user'),'likes:/i/history/likes');
+    assert.equal(core.normalizeSource('likes:'+path+':adult','sample_user'),'likes:/i/history/likes:adult');
+  }
+  for(const source of ['likes:/other/likes','likes:/sample_user/likes/123','timeline:/sample_user/with_replies','bookmarks:/i/bookmarks'])assert.equal(core.normalizeSource(source,'sample_user'),source);
+});

@@ -185,7 +185,7 @@ test('mode switching restores separate histories and pending lists',()=>{
  ['tweet-cleaner:v2:sample_user:bookmarks:preview',JSON.stringify({source:'bookmarks:/i/bookmarks',items:[{id:'3',kind:'bookmark'}]})]
  ]);
  const h=harness([],storage);assert.equal(h.nodes.get('completed').textContent,'2 ações salvas');
- h.nodes.get('mode').value='likes';h.nodes.get('mode').onchange();assert.equal(h.nodes.get('source-link').hidden,false);assert.equal(h.nodes.get('source-link').href,'https://x.com/sample_user/likes');
+ h.nodes.get('mode').value='likes';h.nodes.get('mode').onchange();assert.equal(h.nodes.get('source-link').hidden,false);assert.equal(h.nodes.get('source-link').href,'https://x.com/i/history/likes');
  h.root.location.pathname='/sample_user/likes';h.nodes.get('mode').value='likes';h.nodes.get('mode').onchange();assert.equal(h.nodes.get('completed').textContent,'1 ações salvas');
  assert.equal(h.nodes.get('source-link').hidden,true);
  h.root.location.pathname='/i/bookmarks';h.nodes.get('mode').value='bookmarks';h.nodes.get('mode').onchange();assert.equal(h.nodes.get('completed').textContent,'0 ações salvas');assert.equal(h.nodes.get('pending').textContent,'1');
@@ -274,4 +274,21 @@ test('adult filter requires specific confirmation and stays locked during a run'
  h.nodes.get('adult').checked=true;h.nodes.get('adult').onchange();h.nodes.get('dry').checked=false;await h.nodes.get('start').onclick();assert.equal(h.calls.length,0);
  h.root.prompt=()=> 'REMOVER LIKES ADULTOS @sample_user';const fetch=h.root.fetch;h.root.fetch=async(...args)=>{assert.equal(h.nodes.get('adult').disabled,true);return fetch(...args);};
  await h.nodes.get('start').onclick();assert.equal(h.calls.length,1);assert.equal(h.nodes.get('adult').disabled,false);
+});
+
+test('History Likes selects Likes automatically and preserves the adult-only filter',async()=>{
+ const h=harness([],new Map(),{pathname:'/i/history/likes',phrase:'REMOVER LIKES ADULTOS @sample_user'});
+ assert.equal(h.nodes.get('mode').value,'likes');
+ h.root.document.querySelectorAll=()=>[article('1','other_example',['unlike'],{label:'Content warning: Adult Content'}),article('2','sample_user',['unlike'])];
+ h.nodes.get('adult').checked=true;h.nodes.get('adult').onchange();await h.nodes.get('start').onclick();assert.equal(h.calls.length,0);assert.equal(h.nodes.get('pending').textContent,'1');
+ h.nodes.get('dry').checked=false;await h.nodes.get('start').onclick();assert.equal(h.calls.length,1);assert.match(h.calls[0].url,/\/UnfavoriteTweet$/);assert.equal(JSON.parse(h.calls[0].options.body).variables.tweet_id,'1');
+ h.nodes.get('mode').value='timeline';h.nodes.get('mode').onchange();await h.nodes.get('start').onclick();assert.equal(h.calls.length,1);
+});
+
+test('History Likes reuses old filtered preview before scanning and stops on account change',async()=>{
+ const storage=new Map([['tweet-cleaner:v2:sample_user:likes:preview:adult',JSON.stringify({source:'likes:/sample_user/likes:adult',items:[{id:'1',kind:'like',adult:true},{id:'2',kind:'like',adult:true}]})]]);
+ const h=harness([],storage,{pathname:'/i/history/likes',phrase:'REMOVER LIKES ADULTOS @sample_user'});h.nodes.get('adult').checked=true;h.nodes.get('adult').onchange();assert.equal(h.nodes.get('pending').textContent,'2');h.nodes.get('dry').checked=false;
+ const fetch=h.root.fetch;h.root.fetch=async(...args)=>{assert.equal(h.scrolls.length,0);const result=await fetch(...args);h.root.document.querySelector=()=>({getAttribute:()=>'/other_example'});return result;};
+ await h.nodes.get('start').onclick();assert.equal(h.calls.length,1);assert.equal(h.nodes.get('pending').textContent,'1');assert.match(h.nodes.get('status').textContent,/conta ou página mudou/);
+ assert.deepEqual(JSON.parse(storage.get('tweet-cleaner:v2:sample_user:likes')).done,['like:1']);
 });

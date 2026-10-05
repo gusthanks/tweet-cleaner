@@ -1,6 +1,6 @@
 # Preparação para a Chrome Web Store
 
-Índice de publicação para a versão 3.1.0, baseado na [orientação oficial do Google para desenvolver com IA](https://developer.chrome.com/docs/extensions/ai/build-with-ai). As instruções detalhadas permanecem nos documentos abaixo.
+Índice de publicação para a versão 3.1.1, baseado na [orientação oficial do Google para desenvolver com IA](https://developer.chrome.com/docs/extensions/ai/build-with-ai). As instruções detalhadas permanecem nos documentos abaixo.
 
 ## Finalidade e permissões
 
@@ -14,7 +14,7 @@ O [manifesto](extension/manifest.json) usa Manifest V3 e apenas `activeTab` e `s
 - [Ficha, finalidade, permissões e instruções para revisão](docs/STORE-LISTING.md).
 - [Política de privacidade](extension/privacy.html).
 - [Verificação e suas limitações](docs/VALIDATION.md).
-- `npm run package`: gera `dist/tweet-cleaner-3.1.0.zip` com manifesto na raiz.
+- `npm run package`: gera `dist/tweet-cleaner-3.1.1.zip` com manifesto na raiz.
 
 ## Estado
 

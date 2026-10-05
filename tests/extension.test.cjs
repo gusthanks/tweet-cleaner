@@ -22,6 +22,15 @@ test('popup injects only local bundled engine into the active profile',async()=>
 test('popup supports main bookmarks page without expanding permissions',async()=>{
  const p=popup('https://x.com/i/bookmarks');await p.nodes.get('open').onclick();assert.equal(p.injections.length,1);assert.match(p.nodes.get('status').textContent,/Painel aberto/);
 });
+
+test('popup accepts History Likes but rejects other History routes and descendants',async()=>{
+ for(const url of ['https://x.com/i/history/likes','https://x.com/i/history/likes/?lang=en']){
+  const p=popup(url);await p.nodes.get('open').onclick();assert.equal(p.injections.length,1);assert.match(p.nodes.get('status').textContent,/Painel aberto/);
+ }
+ for(const url of ['https://x.com/i/history','https://x.com/i/history/likes/123','https://x.com/i/history/likesevil','https://x.com.evil.test/i/history/likes']){
+  const p=popup(url);await p.nodes.get('open').onclick();assert.equal(p.injections.length,0);
+ }
+});
 test('popup reports identity errors instead of falsely claiming panel opened',async()=>{
  const p=popup('https://x.com/sample_user',{error:'Conta diferente.'});await p.nodes.get('open').onclick();assert.equal(p.nodes.get('status').textContent,'Conta diferente.');assert.equal(p.nodes.get('status').dataset.error,'true');
 });

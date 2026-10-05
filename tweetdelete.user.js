@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Tweet Cleaner
 // @namespace    urn:tweet-cleaner
-// @version      3.1.0
+// @version      3.1.1
 // @description  Limpeza com prévia, retomada e confirmação explícita.
 // @match        https://x.com/*
 // @grant        GM_registerMenuCommand
@@ -12,7 +12,7 @@ GM_registerMenuCommand('Abrir Tweet Cleaner', () => {
 /* MIT; derived from backzso/tweetdelete (c) 2026 backzso. */
 (function(root){
 'use strict';
-const VERSION='3.1.0';
+const VERSION='3.1.1';
 const MUTATIONS={
  tweet:{queryId:'VaenaVgh5q5ih7kvyVjgtg',operation:'DeleteTweet',result:'delete_tweet'},
  retweet:{queryId:'iQtK4dl5hBmXewYZuEOKVw',operation:'DeleteRetweet',result:'unretweet'},
@@ -43,8 +43,12 @@ function hasAdultWarning(article){
 function scopeAllowed(path,account,mode){
  if(!/^[a-z0-9_]+$/.test(account||''))return false;
  if(mode==='bookmarks')return /^\/i\/bookmarks\/?$/.test(path);
- if(mode==='likes')return path.toLowerCase().replace(/\/$/,'')==='/'+account+'/likes';
+ if(mode==='likes')return /^\/i\/history\/likes\/?$/i.test(path)||path.toLowerCase().replace(/\/$/,'')==='/'+account+'/likes';
  return ['timeline','archive'].includes(mode)&&new RegExp('^/'+account+'(?:/(?:with_replies|retweets|reposts|media))?/?$','i').test(path);
+}
+function normalizeSource(source,account){
+ if(!/^[a-z0-9_]+$/.test(account||''))return source;
+ return source.replace(new RegExp('^likes:(?:/'+account+'/likes|/i/history/likes)/?(?=:adult$|$)','i'),'likes:/i/history/likes');
 }
 function mutationFor(item){
  if(typeof item?.id!=='string'||!/^\d+$/.test(item.id)||!Object.prototype.hasOwnProperty.call(MUTATIONS,item.kind))throw Error('Operação ou ID inválido.');
@@ -68,7 +72,7 @@ function classify(status,body,kind){
 }
 function rateWait(reset,now){const n=Number(reset);return Number.isFinite(n)&&n*1000>now?n*1000-now+5000:900000;}
 function checkpoint(raw){if(!raw)return new Set();const v=JSON.parse(raw);if(v.version!==1||!Array.isArray(v.done)||v.done.some(x=>!/^(tweet|retweet|bookmark|like):\d+$/.test(x)))throw Error('Progresso salvo inválido; exporte antes de limpar o armazenamento.');return new Set(v.done);}
-const core={validHost,parseLink,parseArchive,classify,rateWait,checkpoint,itemAllowed,itemMatchesFilter,adultWarningLabel,hasAdultWarning,scopeAllowed,mutationFor};
+const core={validHost,parseLink,parseArchive,classify,rateWait,checkpoint,itemAllowed,itemMatchesFilter,adultWarningLabel,hasAdultWarning,scopeAllowed,normalizeSource,mutationFor};
 if(typeof module!=='undefined'&&module.exports){module.exports=core;return;}
 const doc=root.document;
 if(!validHost(root.location.hostname)){root.alert('Abra seu perfil em x.com.');return {error:'Abra seu perfil em x.com.'};}
@@ -84,7 +88,7 @@ const key='tweet-cleaner:v2:'+account;
 const progressKey=()=>key+(['bookmarks','likes'].includes(el('mode').value)?':'+el('mode').value:'');
 const interactions=()=>['bookmarks','likes'].includes(el('mode').value);
 const adultOnly=()=>interactions()&&el('adult').checked;
-const sourceKey=()=>el('mode').value+':'+root.location.pathname+(adultOnly()?':adult':'');
+const sourceKey=()=>normalizeSource(el('mode').value+':'+root.location.pathname+(adultOnly()?':adult':''),account);
 const previewKey=()=>progressKey()+':preview'+(adultOnly()?':adult':'');
 const noun=()=>el('mode').value==='bookmarks'?'bookmarks':el('mode').value==='likes'?'likes':'posts';
 const targetNoun=()=>noun()+(adultOnly()?' de conteúdo adulto':'');
@@ -94,7 +98,7 @@ let previewSource='',preview=new Map();
 function loadProgress(){
  done=checkpoint(root.localStorage.getItem(progressKey()));previewSource='';preview=new Map();
  try{const saved=JSON.parse(root.localStorage.getItem(previewKey())||'null');
-  if(saved&&typeof saved.source==='string'&&Array.isArray(saved.items)&&saved.items.every(t=>itemMatchesFilter(t,el('mode').value,adultOnly()))){previewSource=saved.source;preview=new Map(saved.items.map(t=>[t.kind+':'+t.id,t]));}
+  if(saved&&typeof saved.source==='string'&&Array.isArray(saved.items)&&saved.items.every(t=>itemMatchesFilter(t,el('mode').value,adultOnly()))){previewSource=normalizeSource(saved.source,account);preview=new Map(saved.items.map(t=>[t.kind+':'+t.id,t]));}
  }catch(e){ /* Invalid pending cache is discarded, never used for removal. */ }
 }
 const stats={deleted:0,gone:0,failed:0,skipped:0,scanned:0,requests:0},failures=new Map(),attempted=new Set();
@@ -213,7 +217,7 @@ async function run(){
  update(stopped?'Parado. Os IDs encontrados e o progresso foram salvos.':dry?`${number(preview.size)} IDs salvos. Desmarque Prévia sem apagar para ${interactions()?'remover '+targetNoun():'excluir e continuar'}.`:`Execução concluída com ${stats.failed} falhas. Atualize a página para conferir os restantes. `+(interactions()?'Os posts permanecem no X; só '+targetNoun()+' foram removidos.':'Posts antigos podem exigir o arquivo do X.'),stopped?'stopped':'complete');
 }
 function startLabel(){el('start').textContent=el('dry').checked?'Encontrar '+targetNoun():interactions()?'Remover '+targetNoun():previewSource===sourceKey()&&preview.size?'Excluir e continuar':'Excluir disponíveis';el('start').className='primary'+(el('dry').checked?'':' danger');}
-function sourceControls(){const mode=el('mode').value;el('file-field').hidden=mode!=='archive';el('adult-field').hidden=!interactions();el('source-link').hidden=!interactions()||scopeAllowed(root.location.pathname,account,mode);el('source-link').href='https://x.com'+(mode==='bookmarks'?'/i/bookmarks':'/'+account+'/likes');el('source-hint').textContent=mode==='archive'?'O arquivo é lido localmente e nunca é enviado.':interactions()?'Usa '+(mode==='bookmarks'?'a página Bookmarks':'a aba Likes do seu perfil')+'. Remove apenas '+noun()+'; os posts permanecem.':'Busca enquanto rola a página. Posts antigos podem não aparecer.';startLabel();}
+function sourceControls(){const mode=el('mode').value;el('file-field').hidden=mode!=='archive';el('adult-field').hidden=!interactions();el('source-link').hidden=!interactions()||scopeAllowed(root.location.pathname,account,mode);el('source-link').href='https://x.com'+(mode==='bookmarks'?'/i/bookmarks':'/i/history/likes');el('source-hint').textContent=mode==='archive'?'O arquivo é lido localmente e nunca é enviado.':interactions()?'Usa '+(mode==='bookmarks'?'a página Bookmarks':'Likes no Histórico do X')+'. Remove apenas '+noun()+'; os posts permanecem.':'Busca enquanto rola a página. Posts antigos podem não aparecer.';startLabel();}
 el('dry').onchange=()=>{startLabel();update(el('dry').checked?'A prévia encontra e salva IDs. Nenhuma ação é enviada.':interactions()?'Você confirmará a remoção de '+noun()+'. Os posts permanecem no X.':'A exclusão é permanente. Você confirmará a conta antes de começar.','ready');};
 el('mode').onchange=()=>{try{loadProgress();Object.keys(stats).forEach(k=>stats[k]=0);failures.clear();sourceControls();update('Modo alterado. Escolha prévia ou confirme a ação para começar.','ready');}catch(e){update(e.message,'error');}};
 el('adult').onchange=()=>{try{loadProgress();Object.keys(stats).forEach(k=>stats[k]=0);failures.clear();startLabel();update(adultOnly()?'Filtro ativo: apenas avisos explícitos de conteúdo adulto do X. Sem classificação visível, nenhuma ação é enviada.':'Filtro desativado: todos os '+noun()+' encontrados são elegíveis.','ready');}catch(e){update(e.message,'error');}};

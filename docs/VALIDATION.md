@@ -1,4 +1,14 @@
-# Verificação da versão 3.1.0
+# Verificação da versão 3.1.1
+
+Em 5 de outubro de 2026:
+
+- 64 testes passaram com DOM e respostas fictícios. A nova rota `/i/history/likes`, fornecida na captura do usuário, é aceita no popup e no motor e seleciona o modo Likes automaticamente.
+- A prévia filtrada na rota nova não envia alterações e considera somente o aviso adulto explícito. A remoção simulada usa apenas `UnfavoriteTweet`. O modo de posts continua bloqueado nessa página.
+- Prévias filtradas da rota antiga são reaproveitadas antes da rolagem; uma troca da conta conectada interrompe a rodada e mantém os pendentes. As listas gerais e filtradas continuam separadas.
+- Console, userscript e extensão foram gerados com a mesma versão e motor. O pacote atual é `dist/tweet-cleaner-3.1.1.zip`.
+- Não houve remoção real de likes nem instalação/recarregamento da extensão no Chrome nesta correção. A detecção dos avisos e as mutações do X ainda precisam de teste real. A rota foi confirmada pela captura enviada pelo usuário.
+
+## Verificação anterior da versão 3.1.0
 
 Em 5 de outubro de 2026:
 
