@@ -1,5 +1,18 @@
 # Mudanças
 
+## 3.1.0
+
+- Modos separados para remover bookmarks e likes, preservando os posts, com seleção automática pela página aberta.
+- Confirmações específicas, prévias e históricos independentes. Nenhuma permissão adicional na extensão.
+- Verificação de página, marcadores e tipo de operação; listas de salvos ou curtidas nunca acionam exclusão de posts.
+- Likes e bookmarks marcados novamente podem ser processados em outra rodada; falhas continuam pendentes.
+- Filtro opcional Somente conteúdo adulto para likes/bookmarks, usando avisos explícitos do X em português/inglês. Avisos genéricos, texto de posts e citações não qualificam.
+- Listas filtradas independentes da limpeza geral, com confirmação específica e bloqueio do filtro durante a execução. Sem aviso adulto reconhecido, o item é preservado.
+- Mantidas pausa, parada, execução sequencial, espera em HTTP 429 e trava compartilhada por conta entre os modos.
+- Ajuda com o atalho nativo do X para limpar todos os bookmarks e instruções para atualização.
+- Documentação da loja e privacidade atualizadas, com índice CHROMEWEBSTORE.md conforme orientação do Google.
+- 59 testes passaram com DOM e respostas fictícios. Os novos modos e o filtro ainda precisam de teste ao vivo no X.
+
 ## 3.0.0
 
 - Extensão Manifest V3 gratuita com acesso temporário à aba e painel aberto por ação do usuário.

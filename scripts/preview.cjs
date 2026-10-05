@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
+const version = require('../package.json').version;
 const output = path.join(root, 'artifacts', 'preview');
 fs.mkdirSync(output, {recursive: true});
 for (const name of ['index.html', 'demo.js']) fs.copyFileSync(path.join(root, 'preview', name), path.join(output, name));
@@ -15,5 +16,5 @@ fs.copyFileSync(path.join(root,'extension/popup.js'),path.join(popupDir,'popup.j
 fs.copyFileSync(path.join(root,'extension/icons/48.png'),path.join(popupDir,'icons/48.png'));
 const popup=fs.readFileSync(path.join(root,'extension/popup.html'),'utf8');
 fs.writeFileSync(path.join(popupDir,'index.html'),popup.replace('<script src="popup.js">','<script src="stub.js"></script><script src="popup.js">'));
-fs.writeFileSync(path.join(popupDir,'stub.js'),`window.chrome={runtime:{getManifest:()=>({version:'3.0.0'})},tabs:{query:async()=>[{id:1,url:'https://x.com/sample_user'}]},scripting:{executeScript:async()=>[{result:{error:'Demonstração local. Instale a extensão para abrir o painel no X.'}}]}};`);
+fs.writeFileSync(path.join(popupDir,'stub.js'),`window.chrome={runtime:{getManifest:()=>({version:'${version}'})},tabs:{query:async()=>[{id:1,url:'https://x.com/sample_user'}]},scripting:{executeScript:async()=>[{result:{error:'Demonstração local. Instale a extensão para abrir o painel no X.'}}]}};`);
 console.log('Demo local gerado em artifacts/preview (fora do ZIP).');

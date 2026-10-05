@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Tweet Cleaner",
-  "version": "3.0.0",
-  "description": "Limpe posts, respostas e reposts do X com prévia, pausa e retomada. Gratuito, com progresso salvo localmente.",
+  "version": "3.1.0",
+  "description": "Limpe posts, reposts, bookmarks e likes do X com prévia, pausa e retomada. Gratuito, com progresso salvo localmente.",
   "minimum_chrome_version": "120",
   "permissions": ["activeTab", "scripting"],
   "action": {
