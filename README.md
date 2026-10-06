@@ -1,103 +1,113 @@
 # Tweet Cleaner
 
-Extensão gratuita para limpar posts, respostas, reposts, bookmarks e likes do X, com painel em português, prévia, pausa e retomada local. Sem anúncios, assinatura ou teto comercial de itens.
+Free Chrome extension to clean X posts, replies, reposts, bookmarks and likes. Preview, pause and resume with locally saved progress. **English by default, with a one-click Portuguese switch.** No ads, subscriptions or commercial item cap.
 
-Derivada de [backzso/tweetdelete](https://github.com/backzso/tweetdelete), sob licença MIT. Ferramenta independente, sem vínculo com X ou Google.
+Derived from [backzso/tweetdelete](https://github.com/backzso/tweetdelete), under the MIT license. Independent tool, not affiliated with X or Google.
 
-## Instalar a extensão no Chrome
+## Install in Chrome
 
-1. Use a pasta pronta `dist/tweet-cleaner` ou gere com `npm run package`.
-2. Abra `chrome://extensions` e ative **Modo do desenvolvedor**.
-3. Clique **Carregar sem compactação** e selecione a pasta `dist/tweet-cleaner`, que contém `manifest.json`.
-4. Fixe o ícone da extensão. Abra o próprio perfil, **Histórico → Likes** (`/i/history/likes`) ou a página Bookmarks no X.
-5. Clique no ícone e em **Abrir painel nesta aba**.
+1. Build with `npm run build`, or use an already extracted package.
+2. Open `chrome://extensions` and enable **Developer mode**.
+3. Click **Load unpacked** and select `dist/tweet-cleaner`, the folder containing `manifest.json`.
+4. Pin the extension. Open your own profile, **History → Likes** (`/i/history/likes`) or the main Bookmarks page on X.
+5. Click the extension icon, then **Open panel in this tab**.
 
-O pacote ZIP é para envio à loja; para instalação local, selecione a pasta extraída. Nenhuma exclusão começa ao instalar ou abrir o painel.
+The ZIP is for store submission; local installation uses the extracted folder. Installing the extension or opening the panel never starts cleanup.
 
-## Usar o painel
+## Choose your language
 
-1. Em **O que limpar**, escolha posts/reposts da página, posts do arquivo, bookmarks ou likes. Ao abrir o painel em Bookmarks ou Likes, o modo correspondente já vem selecionado.
-2. **Prévia sem apagar** começa marcada. Clique **Encontrar posts**, **Encontrar bookmarks** ou **Encontrar likes** para salvar IDs sem alterar o X. Você pode **Parar** antes de terminar; a lista parcial fica salva.
-3. Desmarque a prévia e clique **Excluir e continuar**, **Remover bookmarks** ou **Remover likes**. Confirme a frase que identifica a ação e a conta conectada. A execução usa os IDs já encontrados e depois continua buscando na página. Sem lista salva, busca e processa diretamente.
-4. Deixe a aba aberta e o computador acordado. **Pausar**, **Retomar** e **Parar** respondem também durante a espera pelo X. Uma requisição já enviada pode terminar após parar.
-5. O botão de minimizar conserva um controle com o estado e a contagem da rodada. Clique nele para reabrir.
-6. Exporte o relatório se precisar. Ao terminar, atualize a página para conferir os restantes. Para posts, execute também nas abas **Respostas** e **Reposts**. A troca de páginas é manual.
+Click **PT** in the popup or panel to switch to Portuguese; click **EN** to return to English. Labels, status, errors, counters and confirmation prompts follow your choice. Switching language preserves the current mode, filter, pending IDs and running state.
 
-Os números principais descrevem a execução atual; **ações salvas** é o histórico acumulado no navegador. Não há uma porcentagem de conclusão: a página não fornece o total acessível de posts. Uma rodada sem novos IDs não comprova que todo o histórico foi removido.
+The extension saves this preference locally in Chrome and shares it between popup and panel. The console/userscript version stores its preference on X. No online translation service or browser sync is used. Language selection changes the tool's interface, not X itself or browser-native file dialogs.
 
-A ferramenta não impõe o teto de 500. As requisições são sequenciais, com no mínimo 800 ms entre itens, além do tempo de rede, rolagem e esperas. HTTP 429 exibe uma contagem regressiva, aguarda o reset informado pelo X (ou 15 minutos quando ausente) e tenta o mesmo ID novamente. Isso não contorna os limites nem garante ausência de restrições da conta.
+## Use the panel
 
-## Bookmarks e likes
+1. Under **What to clean**, choose page posts/reposts, archive posts, bookmarks or likes. Opening on Likes or Bookmarks selects the corresponding mode automatically.
+2. **Preview without changes** starts checked. Click **Find posts**, **Find bookmarks** or **Find likes** to save IDs without changing X. You can **Stop** early and keep a partial list.
+3. Uncheck preview and click **Delete and continue**, **Remove bookmarks** or **Remove likes**. Type the confirmation phrase for the action and signed-in account. The run processes saved IDs first, then continues searching. Without a saved list, it searches and processes directly.
+4. Keep the tab open and your computer awake. **Pause**, **Resume** and **Stop** also work while waiting for X. An in-flight request may finish after you stop.
+5. Minimize the panel to keep a compact status control; click it to reopen.
+6. Export a report if needed. Refresh the page after completion to check what remains. For posts, also run on **Replies** and **Reposts**. Switching pages is manual.
 
-Abra **Bookmarks** pelo menu do X (`/i/bookmarks`) ou **Histórico → Likes** (`/i/history/likes`) e invoque a extensão. A rota antiga de Likes no próprio perfil (`/seu_usuario/likes`) também continua aceita. Esses modos retiram salvos ou curtidas; **não apagam os posts**, mesmo quando você é o autor. O painel confere a conta conectada, a página e o tipo de ação antes de cada requisição. Pastas de bookmarks não são atendidas; use a página principal de salvos.
+Main counters describe the current run; **saved actions** is the accumulated local history. There is no completion percentage because the page does not expose the full accessible total. A run with no new IDs does not prove that the entire history was removed.
 
-A confirmação é específica: `REMOVER BOOKMARKS @sua_conta` ou `REMOVER LIKES @sua_conta`. A frase de exclusão de posts não autoriza essas operações. Prévia, pendentes e histórico ficam separados por modo; uma lista de posts nunca é usada para remover likes ou bookmarks.
+There is no 500-item cap. Requests are sequential, with at least 800 ms between items, plus network, scrolling and waiting time. HTTP 429 shows a countdown, waits for X's reset time (or 15 minutes when absent) and retries the same ID. This respects rate limits; it does not guarantee that X will allow the automation.
 
-Se você curtir ou salvar novamente um post já processado, ele poderá ser reconsiderado numa nova rodada. Atualize a página antes de retomar para refletir o estado atual dos marcadores. O arquivo de posts não é utilizado para likes ou bookmarks. A busca depende dos itens que o X carrega e não garante alcançar todo o histórico.
+## Bookmarks and likes
 
-Para limpar todos os bookmarks, o próprio X oferece uma ação no menu de três pontos da página de salvos. Veja as [instruções oficiais de bookmarks](https://help.x.com/en/using-x/bookmarks). O modo da extensão permite prévia e acompanhamento por item.
+Open **Bookmarks** (`/i/bookmarks`) or **History → Likes** (`/i/history/likes`). The old own-profile route (`/your_handle/likes`) is also accepted. These modes remove interactions and **keep the underlying posts**, including your own posts. The panel checks account, page and operation type before each request. Bookmark folders are not supported; use the main page.
 
-### Somente conteúdo adulto
+English confirmation phrases are `REMOVE BOOKMARKS @your_account` and `REMOVE LIKES @your_account`. In Portuguese they begin with `REMOVER`. The post-deletion phrase cannot authorize these operations. Preview, pending IDs and history are separate for each mode; a post list is never used to remove likes or bookmarks.
 
-Nos modos **Likes** e **Bookmarks**, marque **Somente conteúdo adulto** antes de iniciar. O filtro começa desmarcado. Só entram itens cujo aviso de mídia do X tenha o título explícito **Content warning: Adult Content** ou **Aviso de conteúdo: Conteúdo adulto**, em português ou inglês, associado ao controle Mostrar/Show. A ferramenta não abre a mídia, analisa imagens ou envia conteúdo para uma IA.
+If you like or bookmark a previously processed post again, it can be reconsidered in a new run. Refresh the page before resuming to update markers. Post archives are not used for likes or bookmarks. Discovery depends on what X loads and may miss older items.
 
-Avisos genéricos de conteúdo sensível, violência, nudez, nomes de contas, texto do post e avisos dentro de uma citação não são suficientes. Sem o aviso adulto reconhecido, o item fica intacto. Se suas configurações exibirem mídia sem avisos, esses itens não serão encontrados pelo filtro. A classificação do X pode conter erros; o filtro segue o rótulo exibido, conforme a [política de conteúdo adulto do X](https://help.x.com/pt/rules-and-policies/adult-content).
+X also provides a native action to clear all bookmarks from the main page's three-dot menu. See [X's bookmark instructions](https://help.x.com/en/using-x/bookmarks). The extension offers preview and per-item tracking.
 
-Faça uma prévia com o filtro ativo. A lista filtrada fica separada da lista geral e registra somente ID, operação e a indicação local de aviso adulto. Uma lista geral salva não pode ser usada na execução filtrada. Para remover, desmarque a prévia e confirme `REMOVER LIKES ADULTOS @sua_conta` ou `REMOVER BOOKMARKS ADULTOS @sua_conta`. Após recarregar, selecione novamente o filtro para recuperar seus pendentes filtrados. O filtro fica bloqueado enquanto a rodada está ativa e não se aplica à exclusão de posts.
+### Adult content only
 
-## Arquivo local e retomada
+In **Likes** or **Bookmarks**, optionally check **Adult content only** before starting. The filter is off by default. Only an explicit X media warning titled **Content warning: Adult Content** or **Aviso de conteúdo: Conteúdo adulto**, associated with a Show/Mostrar control, qualifies. The tool never opens media, analyzes images or sends content to AI.
 
-Selecione `data/tweets.js` ou arquivos divididos `tweets-part*.js`. Vários arquivos são deduplicados. São lidos como JSON, nunca executados nem enviados a um serviço do desenvolvedor. Todas as entradas são processadas, incluindo respostas e reposts, por seus IDs de exportação. Reposts restantes podem exigir uma rodada na aba Reposts.
+Generic sensitive-content, violence or nudity notices, account names, post text and warnings inside quoted posts do not qualify. Without a recognized adult warning, the item stays untouched. If your settings show media without warnings, the filter cannot discover those items. X's labels may be wrong; this filter follows the displayed label, as described in [X's adult content policy](https://help.x.com/en/rules-and-policies/adult-content).
 
-O arquivo representa o momento da exportação: posts posteriores precisam de outra rodada. O modo de página rola aos poucos e pode não alcançar posts antigos que o X omite.
+Preview with the filter enabled. The filtered list is separate from the general list and records only ID, operation and a local adult-warning flag. A general saved list cannot be used for filtered removal. Uncheck preview and confirm `REMOVE LIKES ADULT @your_account` or `REMOVE BOOKMARKS ADULT @your_account` (Portuguese: `REMOVER … ADULTOS`). After reloading, reselect the filter to restore filtered pending IDs. The filter is locked during a run and does not apply to deleting posts.
 
-IDs concluídos e pendentes ficam no `localStorage` do site, separados por conta e modo de limpeza. Não há texto de tweets nem tokens no progresso. Após recarregar a aba, abra novamente o painel para retomar. Falhas ficam pendentes; posts excluídos com sucesso são pulados. Likes e bookmarks podem ser reconsiderados se marcados novamente. Uma nova prévia ou a seleção de novos arquivos substitui a lista pendente da fonte atual. A lista não é sincronizada entre navegadores.
+## Local archives and resume
 
-Uma trava impede execuções concorrentes na mesma conta e origem, inclusive entre modos diferentes. A conta identificada no link Perfil deve corresponder ao perfil ou Likes aberto; Bookmarks usa a conta conectada. A página é verificada antes de cada ação. Nenhum usuário pessoal é fixado no código ou nas configurações.
+Select `data/tweets.js` or split `tweets-part*.js` files from your X export. Multiple files are deduplicated. Files are parsed as JSON, never executed or uploaded to the developer. All entries, including replies and reposts, are handled by their export IDs. Remaining reposts may need a separate run on Reposts.
 
-Para atualizar de versões anteriores: pare a execução antiga, espere encerrar, atualize a extensão em `chrome://extensions` e recarregue a aba do X. Confirme **v3.1.1** no cabeçalho do painel. Os IDs de posts das versões 2.1/2.2/3.0 continuam compatíveis na mesma origem e perfil do navegador. Likes e bookmarks têm armazenamentos independentes; prévias de Likes da 3.1.0 são reaproveitadas entre a rota antiga e Histórico, mantendo a separação entre listas gerais e filtradas. Desmarque a prévia para retomar ações pendentes.
+An archive is a snapshot: newer posts need another run. Page mode scrolls incrementally and may not reach older posts X omits.
 
-## Privacidade e compatibilidade
+Completed and pending IDs live in X's `localStorage`, separated by account and cleanup mode. No post text or authentication tokens are stored there. Reload and reopen the panel to resume. Failures remain pending; successfully deleted posts are skipped. Likes/bookmarks can be reconsidered if marked again. Starting a new preview or selecting new files replaces the pending list for that source. Lists are not synchronized across browsers.
 
-- A exclusão é permanente e exige confirmação. A prévia encontra IDs, mas não testa a API de exclusão.
-- O X alerta que automação por scripts do site pode resultar em suspensão. Consulte as [regras de automação](https://help.x.com/en/rules-and-policies/x-automation).
-- Endpoints internos do X podem mudar sem aviso. O script de console anterior já foi usado, mas **a nova extensão ainda precisa de teste ao vivo em uma conta de teste**. Os testes desta versão usam DOM e respostas fictícios.
-- HTTP 401/403/404 interrompe a execução. Respostas ambiguamente bem-sucedidas nunca são contadas como exclusões confirmadas. Erros de rede/servidor têm tentativas limitadas e espera crescente.
-- Chrome recente é necessário. Não há limpeza em segundo plano com a aba fechada.
-- Mensagens, seguidores e dados do perfil não são removidos.
-- O relatório exportado contém conta, IDs, contagens, filtro e falhas; pendentes filtrados também registram a indicação de aviso adulto. Não inclui textos ou cookies. Não publique relatórios, dados do X ou credenciais no GitHub.
+A shared lock prevents concurrent runs for the same account and origin, even across modes. The Profile link must identify the signed-in account; each action rechecks its page. No personal handle is hardcoded in source or configuration.
 
-Leia a [política de privacidade](extension/privacy.html), que explica o processamento local e a autenticação enviada somente ao X. Não há servidor de coleta do desenvolvedor. Desinstalar a extensão não limpa o armazenamento do X nem desfaz exclusões.
+To update: stop the old run and wait for it to finish, reload the extension in `chrome://extensions`, then refresh the X tab. Check **v3.2.0** in the panel. Existing post progress from 2.1/2.2/3.0 remains compatible on the same origin and browser profile. Likes/bookmarks retain separate histories. Old Likes previews are reusable across the legacy and History routes, preserving general/adult-filter separation.
 
-## Publicar na Chrome Web Store
+## Privacy and compatibility
 
-O [guia de instalação e publicação](docs/CHROME-WEB-STORE.md) explica o cadastro, a taxa única do Google, upload do ZIP, imagens, privacidade e submissão para revisão. A [ficha preparada](docs/STORE-LISTING.md) contém descrição e justificativas de permissões. Contato do publicador, URL pública da política e teste real ainda precisam ser definidos antes de submeter. Não há publicação automática.
+- Deleting posts is permanent and requires confirmation. Preview discovers IDs; it does not test the deletion API.
+- X warns that website scripting may result in account suspension. Read [X's automation rules](https://help.x.com/en/rules-and-policies/x-automation).
+- Internal X endpoints may change without notice. The earlier console script has been used, but **the extension still needs live validation on a test account**. Automated checks and the demo use synthetic DOM/network responses.
+- HTTP 401/403/404 stops the run. Ambiguous responses never count as confirmed success. Network/server retries are bounded, with increasing delays.
+- Recent Chrome is required. Cleanup does not run with the tab closed.
+- Messages, followers and profile data are not removed.
+- Reports contain account, IDs, counts, filter and failures; filtered pending items include the adult-warning flag. No post text or cookies are included. Do not publish reports, X data or credentials.
 
-[CHROMEWEBSTORE.md](CHROMEWEBSTORE.md) reúne finalidade, permissões e estado da preparação para a loja, seguindo a orientação do Google para projetos assistidos por IA.
+Read the [English privacy policy](extension/privacy.html) or [Portuguese policy](extension/privacy-pt.html). There is no developer collection server. Uninstalling removes the extension's language preference, but does not clear X progress storage or undo actions.
 
-## Console e userscript
+## Chrome Web Store
 
-`delete-tweets.js` continua independente: copie o conteúdo completo do arquivo (não um diff) e cole no Console enquanto estiver no próprio perfil, Likes ou Bookmarks. O painel também pode ser aberto por `tweetdelete.user.js` no comando **Abrir Tweet Cleaner** de um gerenciador de userscripts compatível.
+The [installation and publication guide](docs/CHROME-WEB-STORE.md) covers developer registration, Google's one-time fee, ZIP upload, images, privacy and review. The [prepared listing](docs/STORE-LISTING.md) includes English copy and permission justifications. Publisher details, a public policy URL and live validation must be completed before submission. Publication is a separate, manual step.
 
-A versão de console abre uma vez por carregamento; use `TweetCleaner.show()` para reabrir ou `TweetCleaner.stop()` para parar. Ao trocar de versão, pare e recarregue a página antes. Não execute simultaneamente o console antigo e a extensão nova.
+[CHROMEWEBSTORE.md](CHROMEWEBSTORE.md) summarizes purpose, permissions and preparation status, following Google's guidance for AI-assisted extension projects.
 
-## Desenvolvimento
+## Console and userscript
+
+`delete-tweets.js` remains self-contained. Copy the **entire file**, not a diff, into the Console on your own profile, Likes or Bookmarks page. A compatible userscript manager can open `tweetdelete.user.js` through **Open Tweet Cleaner**.
+
+The console version opens once per page load. Use `TweetCleaner.show()` to reopen or `TweetCleaner.stop()` to stop. Stop and reload before changing versions. Do not run an older console script alongside the new extension.
+
+## Development
 
 ```sh
-npm test
 npm run build
+npm test
 npm run package
 node --check delete-tweets.js
 ```
 
-Build sem dependências externas: gera o userscript e `dist/tweet-cleaner` a partir do mesmo motor. O pacote inclui apenas os arquivos de execução e a licença. Manifest V3, `activeTab` e `scripting`; sem acesso permanente a todos os sites, código remoto, analytics ou sincronização.
+No external build dependencies. `npm run build` works with Node.js and generates the console script, userscript and `dist/tweet-cleaner`. ZIP packaging through `npm run package` currently requires Windows PowerShell. The ZIP includes only runtime files and the license. Manifest V3 permissions: `activeTab` for temporary access, `scripting` for bundled injection and `storage` for the language preference. No permanent host access, remote code, analytics or sync.
 
-Para regenerar os ícones originais e a imagem promocional: `python scripts/assets.py` (requer Pillow). Para a demonstração local: `node scripts/preview.cjs` e sirva `artifacts/preview` por HTTP local. Ela usa dados fictícios e nunca envia requisições ao X. A demonstração não faz parte do ZIP.
+English is the source language; [locales/pt-BR.json](locales/pt-BR.json) holds Portuguese translations. Build embeds them so console mode needs no extra files. See [localization notes](docs/LANGUAGES.md).
 
-Os testes verificam parsing, IDs, hosts, sucesso explícito, erros, prévia, retomada, conta, limites, estado da interface e abertura do popup. Não substituem um teste real no X.
+Generate original icons/promo art with `python scripts/assets.py` (Pillow required). Generate the synthetic demo with `node scripts/preview.cjs`, then serve `artifacts/preview` locally. It never sends requests to X and is excluded from the ZIP. Tests cover parsing, IDs, hosts, explicit success, errors, preview/resume, account guards, rate limits, UI state, popup and localization. They do not replace live validation.
 
-## Origem
+## Origin
 
-Base: `backzso/tweetdelete`, commit `b824c2a76f21aaf06acc2a3e735be98fc0bf831d`, com histórico Git e licença original preservados. Instruções de [oli-dev0/tweet-clear](https://github.com/oli-dev0/tweet-clear) e [kylesnav/x-deleter](https://github.com/kylesnav/x-deleter) foram referências; nenhum código desses dois projetos foi copiado.
+Base: `backzso/tweetdelete`, commit `b824c2a76f21aaf06acc2a3e735be98fc0bf831d`, with original Git history and MIT license preserved. Instructions from [oli-dev0/tweet-clear](https://github.com/oli-dev0/tweet-clear) and [kylesnav/x-deleter](https://github.com/kylesnav/x-deleter) were research references; no code from those projects was copied. See [research notes](RESEARCH.md) and [changes](CHANGELOG.md).
 
-Veja [CHANGELOG.md](CHANGELOG.md) para as mudanças.
+## Português
+
+O Tweet Cleaner é gratuito e limpa posts, respostas, reposts, likes e bookmarks do X. Começa em inglês: clique **PT** no popup ou painel para usar português; **EN** volta ao inglês. Sua escolha fica salva no navegador, e trocar o idioma preserva a execução e os IDs encontrados.
+
+Para instalar, gere o pacote com `npm run package`, abra `chrome://extensions`, ative **Modo do desenvolvedor** e use **Carregar sem compactação** na pasta `dist/tweet-cleaner`. Pare a versão antiga, recarregue a extensão e atualize a aba do X para usar **v3.2.0**. O painel começa em **Prévia sem apagar**; desmarque e confirme a ação quando quiser executar. Excluir posts é permanente; remover likes/bookmarks preserva os posts. O filtro adulto usa somente avisos explícitos do X, não análise por IA. Leia a [política em português](extension/privacy-pt.html).

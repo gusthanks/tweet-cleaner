@@ -1,48 +1,48 @@
-# Instalar e publicar a extensão
+# Install and publish the extension
 
-## Instalação local gratuita
+## Free local installation
 
-1. Gere o pacote com `npm run package` ou use a pasta pronta `dist/tweet-cleaner`.
-2. No Chrome, abra `chrome://extensions`.
-3. Ative **Modo do desenvolvedor**.
-4. Clique **Carregar sem compactação** e selecione `dist/tweet-cleaner`, a pasta que contém `manifest.json`. Não selecione o ZIP.
-5. Fixe o Tweet Cleaner pelo menu de extensões. Abra o próprio perfil, **Histórico → Likes** (`/i/history/likes`) ou Bookmarks no X, clique no ícone e em **Abrir painel nesta aba**.
+1. Run `npm run build`, or use a ready extracted `dist/tweet-cleaner` folder. ZIP packaging with `npm run package` currently requires Windows PowerShell.
+2. Open `chrome://extensions` in Chrome and enable **Developer mode**.
+3. Click **Load unpacked** and select the folder containing `manifest.json`, not the ZIP.
+4. Pin Tweet Cleaner. Open your own profile, **History → Likes** (`/i/history/likes`) or main Bookmarks page on X.
+5. Click the extension icon and **Open panel in this tab**. Click **PT** for Portuguese if preferred.
 
-Não começa a excluir automaticamente. A extensão continua funcionando enquanto a aba está aberta, mesmo se você fechar o popup. Ela não executa em segundo plano com a aba fechada.
+No deletion starts automatically. Closing the popup does not stop the panel; closing the X tab does. Keep the installed folder in place.
 
-Antes de atualizar: pare a versão antiga e espere a rodada encerrar. Atualize a extensão em `chrome://extensions` e recarregue a aba do X para remover o painel antigo. Os IDs de posts das versões 2.1/2.2/3.0 são preservados na mesma origem e perfil do navegador. Likes e bookmarks usam históricos separados. A pasta instalada precisa continuar existindo.
+Before updating, stop the old run and wait for it to finish. Reload the extension in `chrome://extensions`, then refresh X to remove the old panel. Confirm **v3.2.0**. Existing post progress is compatible on the same origin/profile; likes/bookmarks have separate histories. PT/EN remembers your choice locally.
 
-## Publicação para outras pessoas
+## Publish for other users
 
-A extensão pode ser gratuita para usuários. O Google exige cadastro de desenvolvedor e uma **taxa única de registro**; confira o valor mostrado no cadastro antes de pagar. Não há publicação nem pagamento automático neste projeto.
+The extension can be free for users. Google requires developer registration and a **one-time registration fee**; check the amount displayed before paying. This project does not automatically publish or pay.
 
-1. Entre no [Developer Dashboard](https://chrome.google.com/webstore/devconsole), registre a conta e configure o publicador. Siga o [cadastro oficial](https://developer.chrome.com/docs/webstore/register).
-2. Teste a instalação local em uma conta de teste do X que você controla. Os testes automatizados usam respostas simuladas; não garantem compatibilidade dos endpoints internos com o X ao vivo.
-3. Publique `extension/privacy.html` em uma URL HTTPS pública, acessível sem login. A política dentro do ZIP, sozinha, não substitui o link público solicitado na ficha. Hospedar essa página é um passo separado.
-4. Clique em **New item / Novo item** e envie `dist/tweet-cleaner-3.1.1.zip`. O `manifest.json` fica na raiz desse ZIP; não compacte a pasta do repositório inteiro.
-5. Preencha **Store listing** com `docs/STORE-LISTING.md`. Use o ícone `extension/icons/128.png`, pelo menos uma captura 1280×800 ou 640×400 e a imagem promocional pequena 440×280. As imagens devem representar a experiência real. Os materiais de demonstração deste projeto usam dados fictícios identificados como demonstração.
-6. Em **Privacy**, informe a finalidade única e justifique as duas permissões. Declare com precisão o processamento local de conta, conteúdo, IDs, marcadores de likes/bookmarks e autenticação da sessão, e as requisições enviadas ao X. Não declare que a extensão não usa autenticação: ela lê o token CSRF para operar na sessão já conectada.
-7. Em **Distribution**, escolha distribuição gratuita e a visibilidade desejada. Preencha **Test instructions** conforme o modelo, sem fornecer sua conta pessoal ou cookies.
-8. Revise tudo e clique **Submit for review**. Você pode optar pela publicação adiada para decidir quando disponibilizar após aprovação.
+1. Open the [Developer Dashboard](https://chrome.google.com/webstore/devconsole), register and configure the publisher using [Google's registration guide](https://developer.chrome.com/docs/webstore/register).
+2. Test the local extension using a disposable X account you control. Synthetic tests do not guarantee compatibility with live internal endpoints.
+3. Host `extension/privacy.html` and `privacy-pt.html` at public HTTPS URLs, keeping the relative language links. A policy inside the ZIP does not replace the public URL required by the listing. Hosting requires a separate step.
+4. Click **New item** and upload `dist/tweet-cleaner-3.2.0.zip`. The manifest belongs at the ZIP root. Do not zip the entire repository.
+5. Fill **Store listing** from [STORE-LISTING.md](STORE-LISTING.md), using English as the primary language. Use `extension/icons/128.png`, at least one 1280×800 or 640×400 screenshot, and a 440×280 small promotional image. Images must represent the actual experience. Project demo captures identify their synthetic data.
+6. In **Privacy**, state the single purpose and justify all three permissions. Accurately disclose local account/page/ID/interaction processing and session authentication sent directly to X. `storage` saves only the language preference. Do not claim authentication is unused: the engine reads the CSRF token for the existing session.
+7. Under **Distribution**, choose free distribution and desired visibility. Complete test instructions without supplying personal credentials or cookies.
+8. Review and click **Submit for review**. Deferred publishing lets you choose when to make it available after approval.
 
-O Google pode solicitar alterações ou rejeitar a submissão. Manifest V3 e permissões pequenas não garantem aprovação. O uso de endpoints internos do X e as regras do X precisam ser considerados; não prometa ausência de risco de restrição da conta.
+Google may request changes or reject a submission. Manifest V3 and limited permissions do not guarantee approval. Internal X endpoints and X automation rules remain relevant; do not promise that the account cannot be restricted.
 
-## Dados ainda necessários antes de submeter
+## Required before submission
 
-- Nome público do publicador: `[DADO A CONFIRMAR]`.
-- E-mail ou URL pública de suporte: `[DADO A CONFIRMAR]`.
-- URL HTTPS pública da política de privacidade: `[DADO A CONFIRMAR]`.
-- Categoria e países de distribuição: `[DADO A CONFIRMAR]`.
-- Resultado do teste real da extensão numa conta de teste: `[DADO A CONFIRMAR]`.
+- Public publisher name: `[DADO A CONFIRMAR]`.
+- Support email or public URL: `[DADO A CONFIRMAR]`.
+- Public HTTPS privacy-policy URL: `[DADO A CONFIRMAR]`.
+- Category/distribution countries: `[DADO A CONFIRMAR]`.
+- Live extension validation on an X test account: `[DADO A CONFIRMAR]`.
 
-Nenhum desses dados é substituído por nome de usuário pessoal no pacote.
+The marker means information still needs confirmation. No personal handle replaces missing publisher details in the package.
 
-## Referências oficiais
+## Official references
 
-- [Carregar extensão local](https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked).
-- [Publicação e revisão](https://developer.chrome.com/docs/webstore/publish).
-- [Imagens da ficha](https://developer.chrome.com/docs/webstore/best-listing).
-- [Privacidade no painel](https://developer.chrome.com/docs/webstore/cws-dashboard-privacy).
-- [Permissão activeTab](https://developer.chrome.com/docs/extensions/develop/concepts/activeTab).
-- [Políticas da loja](https://developer.chrome.com/docs/webstore/program-policies/policies).
-- [Desenvolver extensões com assistência de IA](https://developer.chrome.com/docs/extensions/ai/build-with-ai). O índice `CHROMEWEBSTORE.md` orienta a preparação; ferramentas de depuração sugeridas pelo guia não são incluídas no pacote.
+- [Load an unpacked extension](https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked).
+- [Publication and review](https://developer.chrome.com/docs/webstore/publish).
+- [Listing images](https://developer.chrome.com/docs/webstore/best-listing).
+- [Privacy declarations](https://developer.chrome.com/docs/webstore/cws-dashboard-privacy).
+- [activeTab](https://developer.chrome.com/docs/extensions/develop/concepts/activeTab) and [storage](https://developer.chrome.com/docs/extensions/reference/api/storage).
+- [Store policies](https://developer.chrome.com/docs/webstore/program-policies/policies).
+- [AI-assisted development](https://developer.chrome.com/docs/extensions/ai/build-with-ai). Suggested debugging tools are not included in this package.

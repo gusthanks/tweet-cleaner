@@ -1,33 +1,43 @@
-# Verificação da versão 3.1.1
+# Version 3.2.0 validation
 
-Em 5 de outubro de 2026:
+October 6, 2026:
 
-- 64 testes passaram com DOM e respostas fictícios. A nova rota `/i/history/likes`, fornecida na captura do usuário, é aceita no popup e no motor e seleciona o modo Likes automaticamente.
-- A prévia filtrada na rota nova não envia alterações e considera somente o aviso adulto explícito. A remoção simulada usa apenas `UnfavoriteTweet`. O modo de posts continua bloqueado nessa página.
-- Prévias filtradas da rota antiga são reaproveitadas antes da rolagem; uma troca da conta conectada interrompe a rodada e mantém os pendentes. As listas gerais e filtradas continuam separadas.
-- Console, userscript e extensão foram gerados com a mesma versão e motor. O pacote atual é `dist/tweet-cleaner-3.1.1.zip`.
-- Não houve remoção real de likes nem instalação/recarregamento da extensão no Chrome nesta correção. A detecção dos avisos e as mutações do X ainda precisam de teste real. A rota foi confirmada pela captura enviada pelo usuário.
+- 78 automated tests passed with synthetic DOM/network responses. Existing cleanup regressions remain covered, including more than 500 actions, rate-limit retry, account changes, shared locks, pending cache and adult-filter isolation.
+- English is the default in the panel/popup. PT/EN translates current status, errors, counts and confirmations, remembers the choice and shares the preference across extension contexts. No mutation starts from changing language.
+- Switching during a rate wait/pause retains the same pending ID and resumes it. Filtered lists, current mode and counters survive language changes/reload. Locale-specific confirmation rejects a phrase from the other language. English/Portuguese catalog placeholders and generated copies match.
+- The local demo preview found one explicit adult-warning item, saved one pending ID and sent zero mutation calls. Switching to English preserved the list and counters.
+- Desktop UI was checked at an actual content viewport of 1280×720. A browser viewport override did not apply, so small-window checks used the bundled engine inside a 360×760 iframe fixture (345 px document width after the scrollbar). The panel measured 328 px wide with no horizontal overflow. Its buttons were at least 44 px high; the longer Portuguese action wrapped to two lines. Both languages were checked in the popup/panel.
+- Source, console, userscript and unpacked extension share version 3.2.0. The ZIP is `dist/tweet-cleaner-3.2.0.zip`; only known runtime files and the license are included. Demo fixtures, tests, personal archives and reports are excluded.
+- Live installation/reload in Chrome and real X mutations were not performed for this release. Internal endpoints, markers and adult-warning detection still require validation on a disposable X test account. No store submission, registration payment or policy hosting was performed.
 
-## Verificação anterior da versão 3.1.0
+## Earlier validation: 3.1.1
 
-Em 5 de outubro de 2026:
+October 5, 2026:
 
-- 59 testes de lógica, execução e abertura do popup passaram, com DOM e respostas de rede fictícios.
-- Prévia, cache reutilizado, mais de 500 ações, autorização, troca de conta, trava entre abas, interrupção de autenticação, respostas ambíguas, erro de armazenamento, HTTP 429, pausa durante espera e parada foram verificados.
-- Bookmarks e likes usam apenas suas próprias operações, inclusive em posts da própria conta. Página errada, confirmação de outro modo ou cache com tipo de operação errado não enviam requisições. Históricos, pendentes e prévias são independentes; likes/bookmarks marcados novamente continuam elegíveis.
-- O filtro adulto exige aviso de mídia explícito em português/inglês e não reconhece aviso genérico, texto de post, citação ou título sem controle Show. Cache geral não entra no filtro e cache filtrado sem indicação de classificação é rejeitado. A confirmação inclui ADULTOS e o filtro fica bloqueado durante a execução.
-- Na demonstração local, a prévia geral identificou três likes e enviou zero alterações. A prévia filtrada identificou apenas um dos três itens, com aviso fictício, e enviou zero alterações. Depois, uma única remoção simulada foi enviada para o ID filtrado. Não havia mídia adulta na demonstração e nenhuma requisição foi enviada ao X.
-- O layout foi inspecionado em 1280×800 e 360×760, incluindo Likes e Bookmarks com o filtro ativo. O painel mantém a largura dentro da janela e usa rolagem interna em alturas pequenas. Os controles medidos têm pelo menos 44 px, rótulos associados e foco visível.
-- Os arquivos de console, userscript e extensão usam o mesmo motor. Nenhuma demonstração, teste, arquivo pessoal ou relatório faz parte do pacote.
-- A nova extensão, suas mutações de likes/bookmarks e a detecção dos avisos adultos ainda não foram testadas contra uma conta real do X. Avisos ocultos ou estruturas não reconhecidas são preservados; os testes não comprovam alcance de todo o histórico. Publicação na loja, pagamento de cadastro e hospedagem da política não foram executados.
+- 64 synthetic tests passed. `/i/history/likes`, confirmed in the user's screenshot, works in popup/engine and selects Likes automatically.
+- Filtered preview sends no changes; synthetic removal uses only `UnfavoriteTweet`. Post mode remains blocked on Likes pages.
+- Old filtered Likes previews are reusable before scrolling. Account changes stop the run and preserve pending IDs; general/filtered lists stay separate.
+- Console/userscript/extension use the same engine. The package was `dist/tweet-cleaner-3.1.1.zip`.
+- No real like removal or Chrome installation/reload occurred for that fix. The page route was confirmed by the user's screenshot; warning detection/mutations still needed live validation.
 
-## Artefatos locais
+## Earlier validation: 3.1.0
 
-- `dist/tweet-cleaner-3.1.0.zip`: pacote de distribuição.
-- `dist/tweet-cleaner/`: extensão para instalação sem compactação.
-- `artifacts/store/painel-1280x800.png`: captura com dados fictícios identificados.
-- `artifacts/store/painel-bookmarks-mobile.png`: janela 360×760 com filtro ativo; a captura retornada pelo navegador mede 345×728.
-- `artifacts/store/promo-440x280.png`: imagem promocional original.
-- `extension/icons/128.png`: ícone da loja.
+October 5, 2026:
 
-Esses materiais não garantem aprovação na Chrome Web Store ou compatibilidade futura dos endpoints internos do X.
+- 59 synthetic tests passed, covering preview/reusable cache, large runs, authorization, account changes, locks, authentication errors, ambiguous responses, storage failures, HTTP 429, pause and stop.
+- Likes/bookmarks use only their own operations, including on the user's own posts. Wrong page/phrase/type sends no request. Histories/previews are independent, and re-marked interactions remain eligible.
+- The adult filter requires explicit English/Portuguese media warnings; generic notices, post text, quoted content and warnings without a Show control do not qualify. General cache cannot enter the filter; missing adult evidence is rejected. The filter is locked during execution and the phrase includes ADULTOS.
+- The synthetic demo found three general likes or one filtered like with zero mutations during preview. One filtered synthetic removal then succeeded. There was no adult media and no request to X.
+- Layout was inspected at 1280×800 and 360×760, including filtered Likes/Bookmarks. Panel width stays within the window, with internal scrolling for limited height. Measured controls had 44 px targets, associated labels and visible focus.
+- Console/userscript/extension share one engine; test/demo/archive/report files are excluded from distribution.
+- Live X operations and adult warning detection were not validated. Hidden/unrecognized warnings are preserved, and tests do not prove full-history coverage. Store publication/payment/policy hosting were not performed.
+
+## Local artifacts
+
+- `dist/tweet-cleaner-3.2.0.zip`: distribution package.
+- `dist/tweet-cleaner/`: unpacked extension folder.
+- `artifacts/store/panel-en-3.2.0.png`: English panel with identified synthetic data.
+- `artifacts/store/promo-440x280.png`: original promotional image.
+- `extension/icons/128.png`: store icon.
+
+These checks do not guarantee Chrome Web Store approval or future compatibility with X's internal endpoints.

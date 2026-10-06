@@ -13,7 +13,7 @@ if (['likes', 'bookmarks'].includes(demoMode)) {
   const warning = document.createElement('div');
   warning.className = 'demo-warning';
   const title = document.createElement('span');title.textContent = 'Content warning: Adult Content';
-  const note = document.createElement('small');note.textContent = 'Aviso fictício para testar o filtro. Não há mídia adulta.';
+  const note = document.createElement('small');note.textContent = 'Synthetic warning to test the filter. No adult media.';
   const show = document.createElement('button');show.textContent = 'Show';show.disabled = true;
   warning.append(title, note, show);
   document.querySelector('article[data-testid="tweet"]').appendChild(warning);
@@ -32,11 +32,11 @@ window.TweetCleanerDemoRoot = {
   setTimeout: window.setTimeout.bind(window),
   alert: window.alert.bind(window),
   // Auto-confirm only this synthetic environment; the shipped engine still asks.
-  prompt() { const adult = document.querySelector('#tweet-cleaner-panel')?.shadowRoot?.getElementById('adult').checked;return (demoMode === 'likes' ? 'REMOVER LIKES' : demoMode === 'bookmarks' ? 'REMOVER BOOKMARKS' : 'EXCLUIR') + (adult && ['likes','bookmarks'].includes(demoMode) ? ' ADULTOS' : '') + ' @sample_user'; },
+  prompt() { const panel = document.querySelector('#tweet-cleaner-panel')?.shadowRoot;const mode = panel?.getElementById('mode').value;const adult = panel?.getElementById('adult').checked;const portuguese = this.TweetCleaner.language === 'pt-BR';return (['likes','bookmarks'].includes(mode) ? (portuguese ? 'REMOVER ' : 'REMOVE ') + mode.toUpperCase() + (adult ? (portuguese ? ' ADULTOS' : ' ADULT') : '') : (portuguese ? 'EXCLUIR' : 'DELETE')) + ' @sample_user'; },
   async fetch(url, options) {
     // This function never calls window.fetch: all mutations are synthetic.
     calls++;
-    document.getElementById('request-count').textContent = calls + ' chamadas simuladas';
+    document.getElementById('request-count').textContent = calls + ' synthetic calls';
     if (rateNext) {rateNext = false;return {status: 429, headers: {get: () => String(Math.ceil(Date.now()/1000) + 15)}, json: async () => ({errors: []})};}
     const result = url.endsWith('DeleteBookmark') ? {tweet_bookmark_delete: 'Done'} : url.endsWith('UnfavoriteTweet') ? {unfavorite_tweet: 'Done'} : {[url.endsWith('DeleteRetweet') ? 'unretweet' : 'delete_tweet']: {}};
     return {status: 200, headers: {get: () => null}, json: async () => ({data: result})};

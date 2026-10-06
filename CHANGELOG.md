@@ -1,69 +1,71 @@
-# Mudanças
+# Changelog
+
+## 3.2.0
+
+- English-first repository, README, store copy and developer documentation, with a short Portuguese explanation at the end of the README.
+- English by default in popup, panel and standalone script. PT/EN buttons translate labels, status, errors, counters and typed confirmations without resetting the run or pending IDs.
+- Local language preference shared between extension popup/panel using the `storage` permission; console/userscript uses X site storage. No online translation or sync.
+- Shared Portuguese catalog embedded at build time. English and Portuguese privacy policies explain preference storage.
+- Existing progress/cache format, account guards, adult-warning detection and cleanup behavior remain compatible.
 
 ## 3.1.1
 
-- Corrigida a rejeição de `/i/history/likes`, endereço mostrado na captura do usuário. O modo Likes é selecionado automaticamente nessa página.
-- Popup, validação antes de cada requisição e link Abrir a página no X aceitam o Histórico de Likes; a rota antiga do próprio perfil continua compatível.
-- Prévias salvas nas rotas antiga e nova são reaproveitadas para a mesma conta, sem misturar a lista geral com o filtro adulto.
-- Mantidas a confirmação específica, a proteção contra troca de conta e a proibição de excluir posts nas páginas de Likes.
-- 64 testes passaram com DOM e respostas fictícios, incluindo a nova rota, prévia filtrada e interrupção ao trocar de conta.
+- Accept `/i/history/likes`, confirmed in the user's screenshot, and automatically select Likes.
+- Popup, per-request scope validation and page link support History Likes; the old own-profile route remains compatible.
+- Reuse previews across old/new Likes routes for the same account, without mixing general and adult-filtered lists.
+- Preserve action-specific confirmation, account-change protection and the ban on deleting posts from Likes pages.
+- 64 tests passed with synthetic DOM/network responses, including filtered preview and account-change interruption.
 
 ## 3.1.0
 
-- Modos separados para remover bookmarks e likes, preservando os posts, com seleção automática pela página aberta.
-- Confirmações específicas, prévias e históricos independentes. Nenhuma permissão adicional na extensão.
-- Verificação de página, marcadores e tipo de operação; listas de salvos ou curtidas nunca acionam exclusão de posts.
-- Likes e bookmarks marcados novamente podem ser processados em outra rodada; falhas continuam pendentes.
-- Filtro opcional Somente conteúdo adulto para likes/bookmarks, usando avisos explícitos do X em português/inglês. Avisos genéricos, texto de posts e citações não qualificam.
-- Listas filtradas independentes da limpeza geral, com confirmação específica e bloqueio do filtro durante a execução. Sem aviso adulto reconhecido, o item é preservado.
-- Mantidas pausa, parada, execução sequencial, espera em HTTP 429 e trava compartilhada por conta entre os modos.
-- Ajuda com o atalho nativo do X para limpar todos os bookmarks e instruções para atualização.
-- Documentação da loja e privacidade atualizadas, com índice CHROMEWEBSTORE.md conforme orientação do Google.
-- 59 testes passaram com DOM e respostas fictícios. Os novos modos e o filtro ainda precisam de teste ao vivo no X.
+- Separate bookmarks/likes removal modes that preserve posts, automatically selected from the open page.
+- Independent confirmations, previews and histories. No extra extension permissions in that release.
+- Verify page, markers and operation types; interaction lists never trigger post deletion.
+- Re-marked likes/bookmarks remain eligible in later runs; failures stay pending.
+- Optional adult-only filter based on explicit English/Portuguese X media warnings. Generic warnings, post text and quoted content do not qualify.
+- Independent filtered lists, specific confirmation and locked filter during a run; preserve items without a recognized adult warning.
+- Retain pause/stop, sequential requests, HTTP 429 waiting and the shared account lock.
+- Help includes X's native clear-all bookmarks action and update instructions.
+- Store/privacy documentation and CHROMEWEBSTORE.md preparation index.
+- 59 synthetic tests passed. New operations and warning detection still needed live validation.
 
 ## 3.0.0
 
-- Extensão Manifest V3 gratuita com acesso temporário à aba e painel aberto por ação do usuário.
-- Painel com hierarquia, contadores separados, fonte rotulada, ajuda recolhível, foco visível e adaptação a janelas pequenas.
-- Estados claros para prévia, exclusão, espera, pausa, parada, erro e conclusão; contagem regressiva real durante HTTP 429.
-- Corrigida a mensagem de simulação que permanecia durante exclusão e a contagem de ações salvas que não atualizava.
-- Minimização conserva um controle para reabrir e acompanhar o estado.
-- Removidas referências fixas a contas pessoais do código, exemplos, testes e metadados distribuídos.
-- Política de privacidade, roteiro de publicação, ficha da loja, ícones e pacote ZIP.
-- Mantida a execução contínua sem teto de 500 e o progresso compatível com 2.1/2.2.
-- Testes de regressão e popup usam dados e respostas fictícios; nenhum teste exclui posts reais.
+- Free Manifest V3 extension with temporary tab access, opened by user action.
+- Clear source labels, separate counters, collapsible help, visible focus and small-window layout.
+- Preview, deletion, waiting, pause, stop, error and completion states; real HTTP 429 countdown.
+- Fix stale simulation copy during deletion and the saved-action counter.
+- Minimize retains a control to reopen and track progress.
+- Remove hardcoded personal account references from source, examples, tests and distributed metadata.
+- Privacy policy, publishing guide, listing copy, original icons and ZIP package.
+- Continuous execution with no 500-item cap; 2.1/2.2 progress remains compatible.
+- Synthetic regression and popup tests do not delete real posts.
 
 ## 2.2.0
 
-- Removido o teto de 500 itens e requisições por execução, a pedido do usuário.
-- Mantida a espera automática em HTTP 429, sem contornar os limites do X.
-- Exclui primeiro os IDs já salvos e depois continua buscando itens automaticamente na página atual.
-- Progresso e lista pendente da 2.1 continuam compatíveis.
-- Pausa, parada, proteção de conta e interrupção em erros de autenticação permanecem.
-- Testes verificam mais de 500 exclusões e tentativas em uma execução e continuação após uma simulação parcial.
+- Remove the 500-item/request cap at the user's request.
+- Retain automatic HTTP 429 waiting without bypassing X's limits.
+- Process saved IDs first, then continue discovering page items automatically.
+- Preserve 2.1 progress/pending IDs, pause/stop, account guards and authentication failure stops.
+- Test more than 500 deletions/retries per run and continuation after a partial preview.
 
 ## 2.1.0
 
-- Teto de 500 itens e 500 requisições por execução, contando novas tentativas.
-- Simulação para em 500 IDs e salva os pendentes localmente; parar antes também conserva a lista.
-- Botão Excluir lote salvo usa os IDs já encontrados sem repetir a varredura.
-- Cache separado por conta, aba e modo, preservado após atualizar a página.
-- Falhas ficam pendentes; sucessos são retirados da lista; próximo lote requer início manual.
-- Aviso explícito sobre o risco de suspensão por automação do site.
-- Testes com mais de 500 entradas, teto com retries, cache após recarga e interrupção parcial.
+- Cap each run at 500 items/requests, including retries.
+- Stop simulation at 500 IDs and persist pending IDs; an early stop also keeps them.
+- Delete saved batches without repeating the scan; cache survives reload and is scoped to account/page/mode.
+- Failures stay pending; successes leave the list; the next batch requires manual start.
+- Explicit warning about account suspension from website automation.
+- Tests for large input, retry ceiling, reload and partial interruption.
 
 ## 2.0.0
 
-- Painel em português com simulação, confirmação por conta, pausa, parada e relatório.
-- Retomada por IDs concluídos, separada por conta e tipo de ação.
-- Arquivos divididos e deduplicação, sem execução de código do arquivo.
-- Mantém IDs como strings para preservar precisão.
-- Trava contra execuções concorrentes e identificação obrigatória da conta.
-- Correção: HTTP 404 não significa automaticamente post já apagado.
-- Correção: resposta JSON ausente/ambígua não é considerada sucesso.
-- Espera de rate limit respeita o reset completo; tentativas de rede/servidor limitadas.
-- Interrupção em erros de autenticação ou incompatibilidade da API.
-- Userscript gerado pela mesma base, iniciado manualmente.
-- Testes de lógica e execução com respostas simuladas.
+- Portuguese panel with simulation, account confirmation, pause/stop and reports.
+- Resume by completed IDs, separated by account/action; split archives and deduplication.
+- Parse archives without executing code and keep string IDs to preserve precision.
+- Execution lock and mandatory account identification.
+- HTTP 404 is fatal, not automatically an absent post. Missing/ambiguous JSON is never success.
+- Wait for the full rate reset; bound network/server retries; stop on authentication/API errors.
+- Manually started userscript generated from the same engine; synthetic logic/runner tests.
 
-Compatibilidade ao vivo com o X ainda não verificada. O modo de página não garante exclusão de posts antigos que o X não carrega.
+Live X compatibility remains unverified for the extension. Page mode may miss old posts X does not load.

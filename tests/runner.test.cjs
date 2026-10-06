@@ -5,11 +5,13 @@ const fs=require('node:fs');
 const source=fs.readFileSync(require.resolve('../delete-tweets.js'),'utf8');
 function harness(responses=[],storage=new Map(),options={}) {
  const nodes=new Map(),calls=[],scrolls=[];let clock=0;
- const shadow={set innerHTML(html){for(const [,id] of html.matchAll(/id="([^"]+)"/g))nodes.set(id,{checked:id==='dry',value:id==='mode'?'timeline':'',style:{},dataset:{},focus(){}});},getElementById:id=>nodes.get(id)};
+ const shadow={set innerHTML(html){for(const [,id] of html.matchAll(/id="([^"]+)"/g))nodes.set(id,{checked:id==='dry',value:id==='mode'?'timeline':'',style:{},dataset:{},attributes:{},setAttribute(k,v){this.attributes[k]=v;},getAttribute(k){return this.attributes[k];},focus(){}});},getElementById:id=>nodes.get(id)};
  const doc={cookie:'ct0=TEST_ONLY',body:{appendChild(){}},documentElement:{scrollHeight:600},querySelectorAll:()=>[],createElement:()=>({style:{},attachShadow:()=>shadow}),querySelector:()=>({getAttribute:()=>'/sample_user'})};
  const root={document:doc,location:{hostname:'x.com',pathname:options.pathname||'/sample_user'},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},navigator:{locks:{request:async(k,o,fn)=>fn({})}},prompt:()=>options.phrase||'EXCLUIR @sample_user',alert:()=>{},setTimeout:(fn,ms)=>{clock+=ms;setImmediate(fn);},fetch:async(url,options)=>{calls.push({url,options});const op=url.split('/').at(-1),fields={DeleteTweet:'delete_tweet',DeleteRetweet:'unretweet',DeleteBookmark:'tweet_bookmark_delete',UnfavoriteTweet:'unfavorite_tweet'};const r=responses.shift()||{status:200,body:{data:{[fields[op]]:['DeleteBookmark','UnfavoriteTweet'].includes(op)?'Done':{}}}};return {status:r.status,json:async()=>r.body,headers:{get:()=>null}};}};
  class FakeDate extends Date {static now(){return clock;}}
  root.scrollY=0;root.innerHeight=600;root.scrollTo=(...args)=>scrolls.push(args);root.scrollBy=(...args)=>scrolls.push(args);
+ if(options.language!==null)root.TweetCleanerInitialLanguage=options.language||'pt-BR';
+ if(options.chrome)root.chrome=options.chrome;
  vm.runInNewContext(source,{window:root,Date:FakeDate,AbortSignal,URL,Blob,console});
  return {nodes,calls,storage,root,scrolls,async archive(count=2){nodes.get('mode').value='archive';nodes.get('files').files=[{text:async()=>JSON.stringify(Array.from({length:count},(_,i)=>({tweet:{id_str:String(i+1)}})))}];await nodes.get('files').onchange();}};
 }
@@ -186,7 +188,7 @@ test('mode switching restores separate histories and pending lists',()=>{
  ]);
  const h=harness([],storage);assert.equal(h.nodes.get('completed').textContent,'2 ações salvas');
  h.nodes.get('mode').value='likes';h.nodes.get('mode').onchange();assert.equal(h.nodes.get('source-link').hidden,false);assert.equal(h.nodes.get('source-link').href,'https://x.com/i/history/likes');
- h.root.location.pathname='/sample_user/likes';h.nodes.get('mode').value='likes';h.nodes.get('mode').onchange();assert.equal(h.nodes.get('completed').textContent,'1 ações salvas');
+ h.root.location.pathname='/sample_user/likes';h.nodes.get('mode').value='likes';h.nodes.get('mode').onchange();assert.equal(h.nodes.get('completed').textContent,'1 ação salva');
  assert.equal(h.nodes.get('source-link').hidden,true);
  h.root.location.pathname='/i/bookmarks';h.nodes.get('mode').value='bookmarks';h.nodes.get('mode').onchange();assert.equal(h.nodes.get('completed').textContent,'0 ações salvas');assert.equal(h.nodes.get('pending').textContent,'1');
  h.root.location.pathname='/sample_user';h.nodes.get('mode').value='timeline';h.nodes.get('mode').onchange();assert.equal(h.nodes.get('completed').textContent,'2 ações salvas');assert.equal(h.nodes.get('pending').textContent,'0');
@@ -291,4 +293,57 @@ test('History Likes reuses old filtered preview before scanning and stops on acc
  const fetch=h.root.fetch;h.root.fetch=async(...args)=>{assert.equal(h.scrolls.length,0);const result=await fetch(...args);h.root.document.querySelector=()=>({getAttribute:()=>'/other_example'});return result;};
  await h.nodes.get('start').onclick();assert.equal(h.calls.length,1);assert.equal(h.nodes.get('pending').textContent,'1');assert.match(h.nodes.get('status').textContent,/conta ou página mudou/);
  assert.deepEqual(JSON.parse(storage.get('tweet-cleaner:v2:sample_user:likes')).done,['like:1']);
+});
+
+test('first run defaults to English and sends no request until explicitly started',()=>{
+ const h=harness([],new Map(),{language:null});assert.equal(h.root.TweetCleaner.language,'en');assert.equal(h.nodes.get('phase').textContent,'Ready to start');assert.equal(h.nodes.get('start').textContent,'Find posts');assert.equal(h.nodes.get('language').textContent,'PT');assert.equal(h.nodes.get('dry').checked,true);assert.equal(h.calls.length,0);
+});
+
+test('locale changes preserve filtered pending IDs, mode and counts and survive reload',async()=>{
+ const h=harness([],new Map(),{language:null,pathname:'/i/history/likes'});
+ h.root.document.querySelectorAll=()=>[article('1','other_example',['unlike'],{label:'Content warning: Adult Content'})];h.nodes.get('adult').checked=true;h.nodes.get('adult').onchange();await h.nodes.get('start').onclick();
+ const key='tweet-cleaner:v2:sample_user:likes:preview:adult',cache=h.storage.get(key);
+ h.nodes.get('language').onclick();assert.equal(h.root.TweetCleaner.language,'pt-BR');assert.equal(h.nodes.get('start').textContent,'Encontrar likes de conteúdo adulto');assert.equal(h.nodes.get('pending').textContent,'1');assert.equal(h.nodes.get('scanned').textContent,'1');assert.equal(h.storage.get(key),cache);assert.equal(h.nodes.get('mode').value,'likes');assert.equal(h.nodes.get('adult').checked,true);assert.equal(h.calls.length,0);assert.match(h.nodes.get('status').textContent,/IDs salvos/);
+ const next=harness([],h.storage,{language:null,pathname:'/i/history/likes'});assert.equal(next.root.TweetCleaner.language,'pt-BR');next.nodes.get('adult').checked=true;next.nodes.get('adult').onchange();assert.equal(next.nodes.get('pending').textContent,'1');
+});
+
+test('English confirmations reject Portuguese phrases and require the selected action and filter',async()=>{
+ for(const [pathname,phrase,marker] of [['/sample_user','DELETE @sample_user',null],['/i/history/likes','REMOVE LIKES ADULT @sample_user','unlike'],['/i/bookmarks','REMOVE BOOKMARKS ADULT @sample_user','removeBookmark']]){
+  const h=harness([],new Map(),{language:null,pathname});h.root.document.querySelectorAll=()=>[article('1',marker?'other_example':'sample_user',marker?[marker]:[],{label:'Content warning: Adult Content'})];h.nodes.get('adult').checked=Boolean(marker);h.nodes.get('adult').onchange();h.nodes.get('dry').checked=false;
+  await h.nodes.get('start').onclick();assert.equal(h.calls.length,0);let prompt;h.root.prompt=text=>{prompt=text;return phrase;};await h.nodes.get('start').onclick();assert.equal(h.calls.length,1);assert.ok(prompt.includes(phrase));assert.match(prompt,/suspension by X/);
+ }
+});
+
+test('changing language during a rate wait and pause preserves the same pending ID',async()=>{
+ const h=harness([{status:429,body:{}}],new Map(),{language:null,phrase:'DELETE @sample_user'});await h.archive(1);h.nodes.get('dry').checked=false;
+ const schedule=h.root.setTimeout;let switched=false;
+ h.root.setTimeout=(fn,ms)=>{if(h.nodes.get('phase').textContent==='Waiting for X'&&!switched){switched=true;const cache=h.storage.get('tweet-cleaner:v2:sample_user:preview');h.nodes.get('language').onclick();assert.equal(h.nodes.get('phase').textContent,'Aguardando o X');assert.match(h.nodes.get('countdown').textContent,/Retomada automática/);assert.equal(h.storage.get('tweet-cleaner:v2:sample_user:preview'),cache);h.nodes.get('pause').onclick();h.nodes.get('language').onclick();assert.equal(h.nodes.get('phase').textContent,'Run paused');assert.equal(h.nodes.get('pause').textContent,'Resume');h.nodes.get('pause').onclick();}schedule(fn,ms);};
+ await h.nodes.get('start').onclick();assert.equal(switched,true);assert.equal(h.calls.length,2);for(const c of h.calls)assert.equal(JSON.parse(c.options.body).variables.tweet_id,'1');assert.equal(h.nodes.get('phase').textContent,'Run complete');
+});
+
+test('current error and saved counts re-render in the chosen locale',async()=>{
+ const storage=new Map([['tweet-cleaner:v2:sample_user',JSON.stringify({version:1,done:Array.from({length:1000},(_,i)=>'tweet:'+i)})]]);
+ const h=harness([],storage,{language:null});assert.equal(h.nodes.get('completed').textContent,'1,000 saved actions');h.root.location.pathname='/other_example';await h.nodes.get('start').onclick();assert.match(h.nodes.get('status').textContent,/signed-in account/);
+ h.nodes.get('language').onclick();assert.equal(h.nodes.get('completed').textContent,'1.000 ações salvas');assert.match(h.nodes.get('status').textContent,/conta conectada/);assert.equal(h.calls.length,0);
+});
+
+test('extension language preference is shared and never written into X progress storage',async()=>{
+ const saved={'tweet-cleaner:language':'pt-BR'},listeners=[];
+ const chrome={storage:{local:{get:async()=>saved,set:async value=>Object.assign(saved,value)},onChanged:{addListener:fn=>listeners.push(fn)}}};
+ const h=harness([],new Map(),{language:null,chrome});await new Promise(setImmediate);assert.equal(h.root.TweetCleaner.language,'pt-BR');
+ h.nodes.get('language').onclick();assert.equal(saved['tweet-cleaner:language'],'en');assert.equal(h.storage.has('tweet-cleaner:language'),false);
+ listeners[0]({'tweet-cleaner:language':{newValue:'pt-BR'}},'local');assert.equal(h.nodes.get('phase').textContent,'Pronto para começar');assert.equal(h.calls.length,0);
+});
+
+test('slow preference reads cannot undo a newer language choice',async()=>{
+ let resolve;const chrome={storage:{local:{get:()=>new Promise(r=>resolve=r),set:async()=>{}},onChanged:{addListener(){}}}};
+ const h=harness([],new Map(),{language:null,chrome});h.root.TweetCleaner.setLanguage('pt-BR');h.root.TweetCleaner.setLanguage('en');resolve({'tweet-cleaner:language':'pt-BR'});await new Promise(setImmediate);assert.equal(h.root.TweetCleaner.language,'en');
+});
+
+test('archive counts keep numeric values and reformat after switching languages',async()=>{
+ const h=harness([],new Map(),{language:null});await h.archive(1000);assert.equal(h.nodes.get('file-info').textContent,'1,000 unique IDs loaded.');h.nodes.get('language').onclick();assert.equal(h.nodes.get('file-info').textContent,'1.000 IDs únicos carregados.');assert.match(h.nodes.get('status').textContent,/1\.000 IDs/);assert.equal(h.calls.length,0);
+});
+
+test('language-storage failure keeps the UI usable and never starts cleanup',()=>{
+ const h=harness([],new Map(),{language:null});let alert;h.root.alert=text=>alert=text;h.root.localStorage.setItem=()=>{throw Error('quota');};h.nodes.get('language').onclick();assert.equal(h.root.TweetCleaner.language,'pt-BR');assert.match(alert,/preferência de idioma/);assert.equal(h.nodes.get('start').disabled,undefined);assert.equal(h.calls.length,0);
 });
